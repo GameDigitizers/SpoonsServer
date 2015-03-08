@@ -23,6 +23,7 @@ io.on('connection', function(socket){
 });
 
 app.use(express.static(__dirname + '/SpoonsReceiver'));
+app.use(express.static(__dirname + '/SpoonsClient'));
 
 http.listen(3339, function(){
   console.log('listening on *:3000');
