@@ -224,7 +224,7 @@ mc.on('swiperight', function (evt) {
     console.log('swiperight');
     console.log(evt);
     alert('swiped right');
-    socket.emit('pass', pending_cards[0]);
+    socket.emit('pass', pending_cards.shift());
     //remove this gesture listener
     mc.destroy();
 });
