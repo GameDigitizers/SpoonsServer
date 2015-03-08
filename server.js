@@ -27,5 +27,5 @@ app.use(express.static(__dirname + '/client'));
 app.use(express.static(__dirname + '/sender'));
 
 http.listen(3339, function(){
-  console.log('listening on *:3000');
+  console.log('listening on *:3339');
 });
