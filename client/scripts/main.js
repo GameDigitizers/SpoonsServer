@@ -241,7 +241,8 @@ mc.on('swipedown', function (evt) {
     console.log(hand);
 
     //add new card to hand //FIXME:
-    dataSelection
+    handSelection.selectAll('.card')
+        .data(hand.cards)
         .enter()
         .append('svg:image')
         .attr('class', 'card')
