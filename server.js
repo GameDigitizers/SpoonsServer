@@ -20,6 +20,14 @@ io.on('connection', function(socket){
   socket.on('jump', function (socket) {
       chromecast.emit('jump');
   });
+
+  socket.on('pass', function (card) {
+    console.log('i should pass the card', card);
+  });
+
+  socket.on('keep', function (card) {
+    console.log('user is keeping card', card);
+  })
 });
 
 app.use(express.static(__dirname + '/receiver'));

@@ -55,12 +55,57 @@ var card_files = [
 var socket = io();
 var WIDTH_TO_HEIGHT = 125/182;
 var svg = d3.select('svg');
-var shuffled_deck = chance.shuffle(card_files);
-var hand = shuffled_deck.slice(0, 4);
+// var shuffled_deck = chance.shuffle(card_files);
+// var hand = shuffled_deck.slice(0, 4);
+var hand = {
+    cards: [
+        {
+            id: 'kc',
+            src: "king_of_clubs2.png",
+            suit: 'clubs',
+            value: 'king'
+        },
+        {
+            id: 'as',
+            src: "ace_of_spades2.png",
+            suit: 'spades',
+            value: 'ace'
+        },
+        {
+            id: '7d',
+            src: "7_of_diamonds.png",
+            suit: 'diamonds',
+            value: '7'
+        },
+        {
+            id: '3c',
+            src: "3_of_clubs.png",
+            suit: 'clubs',
+            value: '3'
+        }
+    ],
+    cardById: function (id) {
+        for (var i=0; i<this.cards.length; i++) {
+            if (this.cards[i].id === id) {
+                return this.cards[i];
+            }
+        }
+        return null;
+    }
+};
+var pending_cards = [
+    {
+        id: 'qh',
+        src: "queen_of_hearts2.png",
+        suit: 'hearts',
+        value: 'queen'
+    }
+];
 var width, height;
-var card_width;
+var card_width, card_height;
+var hand_spacing;
 var pending_card_width, pending_card_height;
-
+var dataSelection;
 var handSelection = svg.append('g')
     .attr('class', 'hand');
 var newCardSelection = svg.append('g')
@@ -70,75 +115,173 @@ var newCardSelection = svg.append('g')
 function setup () {
     width = $('svg').width();
     height = $('svg').height();
-    card_width = .2*width;
-    var dataSelection = handSelection.selectAll('.card')
-        .data(hand);
+    // card_width = .2*width;
+    dataSelection = handSelection.selectAll('.card')
+        .data(hand.cards);
+
+    if (width/height > WIDTH_TO_HEIGHT) {
+        pending_card_height = .7*height;
+        pending_card_width = pending_card_height*WIDTH_TO_HEIGHT;
+        card_height = .2*height;
+        card_width = card_height*WIDTH_TO_HEIGHT;
+    } else {
+        pending_card_width = .8*width;
+        pending_card_height = pending_card_width/WIDTH_TO_HEIGHT;
+        card_width = .2*width;
+        card_height = card_width/WIDTH_TO_HEIGHT;
+    }
+    hand_spacing = (width - card_width*hand.cards.length)/(hand.cards.length+1);
 
     dataSelection
         .enter()
         .append('svg:image')
         .attr('class', 'card')
         .attr('x', function (theCard, index) {
-            return index*0.20*width + 10*(index+1);
+            return index*card_width + hand_spacing*(index+1);
         })
-        .attr('y', height * .8)
+        .attr('y', height - card_height)
         .attr('width', card_width)
-        .attr('height', card_width/WIDTH_TO_HEIGHT)
+        .attr('height', card_height)
         .attr('xlink:href', function (theCard) {
-            return 'images/' + theCard;
+            return 'images/' + theCard.src;
         });
 
-    if (width/height > WIDTH_TO_HEIGHT) {
-        pending_card_height = .7*height;
-        pending_card_width = pending_card_height*WIDTH_TO_HEIGHT;
-    } else {
-        pending_card_width = .8*width;
-        pending_card_height = pending_card_width/WIDTH_TO_HEIGHT;
-    }
 
     newCardDataSelection = newCardSelection
         .selectAll('.the-pending-card')
-        .data([shuffled_deck[4]]);
+        .data(pending_cards);
 
     newCardDataSelection
         .enter()
         .append('svg:image')
+        .attr('id', function (theCard) {
+            return theCard.id;
+        })
         .attr('class', 'the-pending-card')
         .attr('x', width/2 - pending_card_width/2)
         .attr('y', .4*height - pending_card_height/2)
         .attr('width', pending_card_width)
         .attr('height', pending_card_height)
         .attr('xlink:href', function (theCard) {
-            return 'images/' + theCard;
+            return 'images/' + theCard.src;
         });
-
 }
 
-setup();
+function redraw () {
 
-$(window).resize(function () {
-    console.log('resizing');
     width = $('svg').width();
     height = $('svg').height();
-    card_width = .2*width;
-    handSelection.selectAll('.card')
-        .attr('x', function (theCard, index) {
-            return index*0.20*width + 10;
-        })
-        .attr('width', card_width)
-        .attr('height', card_width/WIDTH_TO_HEIGHT)
 
     if (width/height > WIDTH_TO_HEIGHT) {
         pending_card_height = .7*height;
         pending_card_width = pending_card_height*WIDTH_TO_HEIGHT;
+        card_height = .2*height;
+        card_width = card_height*WIDTH_TO_HEIGHT;
     } else {
         pending_card_width = .8*width;
         pending_card_height = pending_card_width/WIDTH_TO_HEIGHT;
+        card_width = .2*width;
+        card_height = card_width/WIDTH_TO_HEIGHT;
     }
+    hand_spacing = (width - card_width*hand.cards.length)/(hand.cards.length+1);
+    
+    handSelection.selectAll('.card')
+        .attr('x', function (theCard, index) {
+            return index*card_width + hand_spacing*(index+1);
+        })
+        .attr('y', height - card_height)
+        .attr('width', card_width)
+        .attr('height', card_height)
+
 
     newCardSelection.selectAll('.the-pending-card')
         .attr('x', width/2 - pending_card_width/2)
         .attr('y', .4*height - pending_card_height/2)
         .attr('width', pending_card_width)
         .attr('height', pending_card_height);
+
+}
+
+setup();
+
+$(window).resize(function () {
+    // console.log('resizing');
+    redraw();
 });
+
+function panHandler() {
+
+    console.log('panning');
+}
+
+// $('.the-pending-card').hammer().bind('pan', panHandler);
+var hammertime = new Hammer($('.the-pending-card')[0]);
+var mc = hammertime;
+// var hammertime = $('.the-pending-card').hammer();
+hammertime.get('swipe').set({ direction: Hammer.DIRECTION_ALL });
+
+mc.on('swiperight', function (evt) {
+    console.log('swiperight');
+    console.log(evt);
+    alert('swiped right');
+    socket.emit('pass', pending_cards[0]);
+    //remove this gesture listener
+    mc.destroy();
+});
+
+mc.on('swipedown', function () {
+
+    console.log('swipedown');
+    console.log(hand);
+    var keep_the_card = pending_cards.shift();
+    socket.emit('keep', keep_the_card);
+    hand.cards.push(keep_the_card);
+    console.log(hand);
+
+    //add new card to hand //FIXME:
+    dataSelection
+        .enter()
+        .append('svg:image')
+        .attr('class', 'card')
+        .attr('xlink:href', function (theCard) {
+            return 'images/' + theCard.src;
+        });
+
+    //remove new card from pending //FIXME:
+    newCardDataSelection
+        .exit()
+        .remove('.the-pending-card');
+
+    // show all 5 cards at bottom
+    redraw();
+
+    // translate the 5 cards to be vertical
+    // d3.selectAll('.card')
+    // dataSelection
+    handSelection.selectAll('.card')
+        .transition()
+        .attr('transform', function (theCard, index) {
+            console.log('translating:', theCard, index);
+            var pass_card_height = height * .9/hand.cards.length;
+            var pass_card_width = pass_card_height * WIDTH_TO_HEIGHT;
+            var pass_card_space_height = (height * .1)/(hand.cards.length+1);
+            var pass_card_x = width/2 - pass_card_width/2;
+            var pass_card_y = index*pass_card_height + pass_card_space_height*(index+1);
+            var returnVal = 'translate('+pass_card_x+','+pass_card_y+')';
+            console.log(returnVal);
+            return returnVal;
+        })
+        .ease('linear')
+        .duration(250);
+
+    //remove this gesture listener
+    mc.destroy();
+    alert('swiped down');
+});
+
+$(document).bind(
+   'touchmove',
+   function(e) {
+     e.preventDefault();
+   }
+);
