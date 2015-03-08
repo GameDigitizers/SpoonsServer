@@ -223,16 +223,18 @@ hammertime.get('swipe').set({ direction: Hammer.DIRECTION_ALL });
 mc.on('swiperight', function (evt) {
     console.log('swiperight');
     console.log(evt);
+    d3.select(evt.target).remove();
     alert('swiped right');
     socket.emit('pass', pending_cards.shift());
     //remove this gesture listener
     mc.destroy();
 });
 
-mc.on('swipedown', function () {
+mc.on('swipedown', function (evt) {
 
     console.log('swipedown');
     console.log(hand);
+    d3.select(evt.target).remove();
     var keep_the_card = pending_cards.shift();
     socket.emit('keep', keep_the_card);
     hand.cards.push(keep_the_card);
