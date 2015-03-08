@@ -18,7 +18,7 @@ io.on('connection', function(socket){
   });
 
   socket.on('jump', function (socket) {
-      chromecast.emit('jump', {});
+      chromecast.emit('jump');
   });
 });
 

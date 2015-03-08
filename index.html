@@ -25,6 +25,7 @@
       $('form').submit(function(){
         socket.emit('chat message', $('#m').val());
         $('#m').val('');
+        socket.emit('jump');
         return false;
       });
       socket.on('chat message', function(msg){
