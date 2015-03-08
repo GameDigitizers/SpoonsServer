@@ -107,7 +107,7 @@ function board(context) {
 
     var svg = d3.select('svg');
 
-    // These are the size of the screem
+    // These are the size of the screen
     var width = $('svg').width();
     var height = $('svg').height();
 
