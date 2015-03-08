@@ -138,6 +138,9 @@ function board(context) {
     var playable_area_width = width - (2 * x_margin);
     var playable_area_height = height - (2 * y_margin);
 
+    var card_width = 30;
+    var card_height = 50;
+
     var min_avatar_height = 125;
     var max_avatar_height = 250;
     // adjust the avatar size based on the number of players
@@ -191,6 +194,20 @@ function board(context) {
     personSelection
       .append('g')
         .attr('class', 'card-stack')
+          .append('svg:image')
+            .attr('x', function (person, index) {
+              // x_radius * cos(Theta)
+              return (x_radius * Math.cos( (index) / players.length * 2 * Math.PI) ) + (width/2) - (avatar_size/2) ;
+            })
+            .attr('y', function (person, index) {
+              // y_radius * sin(Theta)
+              return (y_radius * Math.sin((index) / players.length * 2 * Math.PI)) + (height/2) - (avatar_size/2);
+            })
+            .attr('width', card_width)
+            .attr('height', card_height)
+            .attr('xlink:href', function (player) {
+              return 'images/blueGrid.png';
+            })
 
     personSelection
       .append('text')
