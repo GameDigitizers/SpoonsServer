@@ -135,6 +135,9 @@ function setup () {
     dataSelection
         .enter()
         .append('svg:image')
+        .attr('id', function (theCard) {
+            return theCard.id;
+        })
         .attr('class', 'card')
         .attr('x', function (theCard, index) {
             return index*card_width + hand_spacing*(index+1);
@@ -224,7 +227,7 @@ mc.on('swiperight', function (evt) {
     console.log('swiperight');
     console.log(evt);
     d3.select(evt.target).remove();
-    alert('swiped right');
+    // alert('swiped right');
     socket.emit('pass', pending_cards.shift());
     //remove this gesture listener
     mc.destroy();
@@ -261,25 +264,46 @@ mc.on('swipedown', function (evt) {
     // translate the 5 cards to be vertical
     // d3.selectAll('.card')
     // dataSelection
-    handSelection.selectAll('.card')
+    setTimeout(function () {
+        handSelection.selectAll('.card')
         .transition()
         .attr('transform', function (theCard, index) {
             console.log('translating:', theCard, index);
-            var pass_card_height = height * .9/hand.cards.length;
+            var hammerTime = new Hammer($(this)[0]);
+            hammerTime.on('swiperight', function (evt) {
+                console.log('swiperight');
+                console.log(evt);
+                d3.select(evt.target).remove();
+                // alert('swiped right');
+                socket.emit('pass', hand.cardById(evt.target.id));
+                //remove this gesture listener
+                hammerTime.destroy();
+                // TODO: should now put the cards back into the 4 on the bottom layout
+            });
+            var oldX = d3.select(this).attr('x');
+            console.log(oldX);
+            var oldY = d3.select(this).attr('y')
+            console.log(oldY);
+            // give the cards 90% of the height, and split the other 10% for the spacing
+            var pass_card_height = height * .8/hand.cards.length;
+            var pass_card_space_height = (height * .2)/(hand.cards.length+1);
+
+            // set the cards' width based on their height (and the card width:height ratio)
             var pass_card_width = pass_card_height * WIDTH_TO_HEIGHT;
-            var pass_card_space_height = (height * .1)/(hand.cards.length+1);
-            var pass_card_x = width/2 - pass_card_width/2;
-            var pass_card_y = index*pass_card_height + pass_card_space_height*(index+1);
+
+            var pass_card_x = width/2 - pass_card_width/2 - oldX;
+            var pass_card_y = index*pass_card_height + pass_card_space_height*(index+1) - oldY;
             var returnVal = 'translate('+pass_card_x+','+pass_card_y+')';
             console.log(returnVal);
             return returnVal;
         })
         .ease('linear')
-        .duration(250);
+        .duration(500);
+    }, 250);
 
     //remove this gesture listener
     mc.destroy();
-    alert('swiped down');
+    // alert('swiped down');
 });
 
 $(document).bind(
