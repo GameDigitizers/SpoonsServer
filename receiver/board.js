@@ -197,11 +197,11 @@ function board(context) {
           .append('svg:image')
             .attr('x', function (person, index) {
               // x_radius * cos(Theta)
-              return (x_radius * Math.cos( (index) / players.length * 2 * Math.PI) ) + (width/2) - (avatar_size/2) ;
+              return ((x_radius - avatar_size) * Math.cos( (index) / players.length * 2 * Math.PI) ) + (width/2) - (card_width/2) ;
             })
             .attr('y', function (person, index) {
               // y_radius * sin(Theta)
-              return (y_radius * Math.sin((index) / players.length * 2 * Math.PI)) + (height/2) - (avatar_size/2);
+              return ((y_radius - avatar_size) * Math.sin((index) / players.length * 2 * Math.PI)) + (height/2) - (card_height/2);
             })
             .attr('width', card_width)
             .attr('height', card_height)
@@ -214,11 +214,11 @@ function board(context) {
         .attr('class', 'name')
         .attr('x', function (person, index) {
           // x_radius * cos(Theta)
-          return (x_radius * Math.cos( (index) / players.length * 2 * Math.PI) ) + (width/2) - (avatar_size/2) ;
+          return ((x_radius + avatar_size/1.5) * Math.cos( (index) / players.length * 2 * Math.PI) ) + (width/2) -avatar_size*.35 ;
         })
         .attr('y', function (person, index) {
           // y_radius * sin(Theta)
-          return (y_radius * Math.sin((index) / players.length * 2 * Math.PI)) + (height/2) - (avatar_size/2);
+          return ((y_radius + avatar_size/1.5) * Math.sin((index) / players.length * 2 * Math.PI)) + (height/2) ;
         })
         .text( function (person, index) {
           return person.name;
