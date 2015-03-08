@@ -11,12 +11,14 @@ var chromecast;
 
 io.on('connection', function(socket){
   console.log('CONNECTED');
+  
   socket.on('i_am_chromecast', function(msg){
+    console.log("SOMEONE CLAIMS TO BE A CHROMECAST");
     chromecast = socket;
   });
 
   socket.on('jump', function (socket) {
-      chromecast.emit('jump');
+      chromecast.emit('jump', {});
   });
 });
 
