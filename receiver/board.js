@@ -111,24 +111,27 @@ function board(context) {
     var width = $('svg').width();
     var height = $('svg').height();
 
-    var players = [
-      { name: 'player1', avatar: 'bear.png'     },
-      { name: 'player2', avatar: 'beaver.png'   },
-      { name: 'player3', avatar: 'bee.png'      },
-      { name: 'player4', avatar: 'chicken.png'  },
-      { name: 'player5', avatar: 'cow.png'      },
-      { name: 'player6', avatar: 'dog.png'      },
-      { name: 'player7', avatar: 'elephant.png' },
-      { name: 'player8', avatar: 'giraffe.png'  },
-      { name: 'player9', avatar: 'goat.png'     },
-      { name: 'player10', avatar: 'hippo.png'    },
-      { name: 'player11', avatar: 'owl.png'      },
-      { name: 'player12', avatar: 'penguin.png'  },
-      { name: 'player13', avatar: 'pig.png'      },
-      { name: 'player14', avatar: 'sheep.png'    },
-      { name: 'player15', avatar: 'turkey.png'   },
-      { name: 'player16', avatar: 'zebra.png'    }
+    var potential_players = [
+      { name: 'Dominick Quigley',           avatar: 'bear.png'      },
+      { name: 'Lyndia Steuber',             avatar: 'beaver.png'    },
+      { name: 'Mrs. Suzanne Stanton',       avatar: 'bee.png'       },
+      { name: 'Zina Buckridge',             avatar: 'chicken.png'   },
+      { name: 'Miley Tromp MD',             avatar: 'cow.png'       },
+      { name: 'Roderic Considine',          avatar: 'dog.png'       },
+      { name: 'Tierra Witting MD',          avatar: 'elephant.png'  },
+      { name: 'Dr. Hayden Lockman',         avatar: 'giraffe.png'   },
+      { name: 'Rhonda Cormier',             avatar: 'goat.png'      },
+      { name: 'Tod Heller',                 avatar: 'hippo.png'     },
+      { name: 'Jesenia Rogahn',             avatar: 'owl.png'       },
+      { name: 'Mr. Reinhold Schmidt DDS',   avatar: 'penguin.png'   },
+      { name: 'Dawson Rohan',               avatar: 'pig.png'       },
+      { name: 'Burney OKon',                avatar: 'sheep.png'     },
+      { name: 'Mack Koch',                  avatar: 'turkey.png'    },
+      { name: 'Trina Friesen',              avatar: 'zebra.png'     }
     ]
+
+    var number_of_players = 7;
+    var players = chance.shuffle(potential_players).slice(0, number_of_players)
 
     // Margins set at 5%
     var x_margin = width * .05;
@@ -164,9 +167,11 @@ function board(context) {
     var spoon_size = 30;
     var spoon_buffer = spoon_size + 30;
 
+    calculatePlayerInfo();
+
     // make the avatars
     var personSelection = svg.selectAll('.avatar')
-      .data(chance.shuffle(players))
+      .data(players)
       .enter()
         .append('g')
           .attr('class', 'person')
@@ -197,11 +202,11 @@ function board(context) {
           .append('svg:image')
             .attr('x', function (person, index) {
               // x_radius * cos(Theta)
-              return ((x_radius - avatar_size) * Math.cos( (index) / players.length * 2 * Math.PI) ) + (width/2) - (card_width/2) ;
+              return person.card_pile_location.x ;
             })
             .attr('y', function (person, index) {
               // y_radius * sin(Theta)
-              return ((y_radius - avatar_size) * Math.sin((index) / players.length * 2 * Math.PI)) + (height/2) - (card_height/2);
+              return person.card_pile_location.y;
             })
             .attr('width', card_width)
             .attr('height', card_height)
@@ -224,8 +229,10 @@ function board(context) {
           return person.name;
         })
         .attr('font-family', 'sans-serif')
-        .attr('font-size', '20px')
-        .attr('fill', 'orange');
+        .attr('font-size', '25px')
+        .attr('stroke', 'black')
+        .attr('stroke-width', '2px')
+        .attr('fill', 'white');
 
 
     var spoons = [];
@@ -275,7 +282,34 @@ function board(context) {
               .duration(1000);         
            });
     };
+
+    function passLeft(){
+      d3.selectAll('.person g image')
+        .each(function(d, i, array){
+          console.log(this);
+          d3.select(this)
+            .transition()
+            .attr('x', function(){
+              return players[ d3.min([ (i+1), players.length-1 ]) ].card_pile_location.x;     
+            })
+            .attr('y', function(){
+              return players[ d3.min([ (i+1), players.length-1 ]) ].card_pile_location.y;    
+            })
+            .ease('linear')
+            .duration(1000);
+        })
+    };
+    window.pl = passLeft();
     
+    function calculatePlayerInfo(){
+      players.forEach(function(player, index, array){
+        card_pile_location = {}
+        card_pile_location.x = ((x_radius - avatar_size) * Math.cos( (index) / array.length * 2 * Math.PI) ) + (width/2) - (card_width/2);
+        card_pile_location.y = ((y_radius - avatar_size) * Math.sin((index) / array.length * 2 * Math.PI)) + (height/2) - (card_height/2);
+        player.card_pile_location = card_pile_location;
+      }, this);
+    };
+
     function randomInnerPath(){
       var theta =  chance.natural({ min:0, max:2*Math.PI });
       str = 'translate(' +
