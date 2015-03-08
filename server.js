@@ -22,8 +22,9 @@ io.on('connection', function(socket){
   });
 });
 
-app.use(express.static(__dirname + '/SpoonsReceiver'));
-app.use(express.static(__dirname + '/SpoonsClient'));
+app.use(express.static(__dirname + '/receiver'));
+app.use(express.static(__dirname + '/client'));
+app.use(express.static(__dirname + '/sender'));
 
 http.listen(3339, function(){
   console.log('listening on *:3000');
