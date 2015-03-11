@@ -53,6 +53,9 @@ var card_files = [
     "queen_of_spades2.png"];
 
 var socket = io();
+
+socket.emit('join-game', {game_id: 'SPOON'});
+
 var WIDTH_TO_HEIGHT = 125/182;
 var svg = d3.select('svg');
 var shuffled_deck = chance.shuffle(card_files);

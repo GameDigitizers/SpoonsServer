@@ -130,7 +130,7 @@ function board(context) {
       { name: 'Trina Friesen',              avatar: 'zebra.png'     }
     ]
 
-    var number_of_players = 7;
+    var number_of_players = chance.integer({min: 3, max: potential_players.length});
     var players = chance.shuffle(potential_players).slice(0, number_of_players)
 
     // Margins set at 5%
