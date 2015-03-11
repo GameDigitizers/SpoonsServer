@@ -2,6 +2,7 @@ var express = require('express');
 var app = express();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
+var _ =   require('lodash');
 var machina = require('machina');
 var chance = new require('chance')();
 
@@ -9,18 +10,29 @@ app.get('/', function(req, res){
   res.sendFile(__dirname + '/index.html');
 });
 
+var INITIAL_AVATARS = [
+  'bear.png',
+  'beaver.png',
+  'bee.png',
+  'chicken.png',
+  'cow.png',
+  'dog.png',
+  'elephant.png',
+  'giraffe.png',
+  'goat.png',
+  'hippo.png',
+  'owl.png',
+  'penguin.png',
+  'pig.png',
+  'sheep.png',
+  'turkey.png',
+  'zebra.png'
+];
 
+var Player = function (game, socket) {
 
-var Player = function (in_game, in_socket) {
-  var socket = in_socket;
-  var game = in_game;
-
-  this.chooseAvatar = function () {
-    socket.emit('choose-avatar', { avatars: [] });
-
-    socket.on('avatar-choice', function (message) {
-      game.handle('avatar-choice', message.avatar);
-    });
+  this.chooseAvatar = function (available_avatars) {
+    socket.emit('choose-avatar', { avatars: available_avatars }); 
   }
 
 }
@@ -31,6 +43,8 @@ var GameFsm = machina.Fsm.extend({
   initialize: function () {
     this.chromecasts = [];
     this.players = [];
+
+    this.available_avatars = INITIAL_AVATARS;
 
     // this.game_id = chance.string({
     //   length:5,
@@ -44,15 +58,13 @@ var GameFsm = machina.Fsm.extend({
 
   states: {
     lobby: {
-      connection: function (socket) {
-        player = new Player(this, socket);
-        this.players.push(player);
-
+      'new-player': function (player) {
         player.chooseAvatar(this.available_avatars);
       },
 
-      'avatar-choice': function (avatar) {
-        chromecast.newPlayer(avatar);
+      'avatar-choice': function (msg) {
+        console.log("Trying to tell chromecast about", msg);  
+        // chromecast.newPlayer(avatar);
       }
     }
   },
@@ -66,6 +78,30 @@ var GameFsm = machina.Fsm.extend({
     this.chromecasts.push(chromecast);
 
     // this.handle('send-view')
+  },
+
+  new_player: function (socket) {
+    var player = new Player(this, socket);
+    this.players.push(player);
+
+    socket.on('jump', function (socket) {
+        chromecast.emit('jump');
+    });
+
+    socket.on('pass', function (card) {
+      console.log('i should pass the card', card);
+    });
+
+    socket.on('keep', function (card) {
+      console.log('user is keeping card', card);
+    });
+
+    socket.on('avatar-choice', function (msg) {
+      console.log('user wants to be', msg);
+      this.handle('avatar-choice', msg);
+    }.bind(this));
+
+    this.handle('new-player', player);
   }
 });
 
@@ -94,20 +130,13 @@ io.on('connection', function(socket){
   socket.on('join-game', function (msg) {
     if (msg && msg.game_id) {
       console.log("A client wants to join " + msg.game_id);
+
+      if (_.has(active_games, msg.game_id)) {
+        active_games[msg.game_id].new_player(socket);
+      }
     }
   });
 
-  socket.on('jump', function (socket) {
-      chromecast.emit('jump');
-  });
-
-  socket.on('pass', function (card) {
-    console.log('i should pass the card', card);
-  });
-
-  socket.on('keep', function (card) {
-    console.log('user is keeping card', card);
-  })
 });
 
 // In case paths start conflicting

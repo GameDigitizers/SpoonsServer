@@ -56,6 +56,11 @@ var socket = io();
 
 socket.emit('join-game', {game_id: 'SPOON'});
 
+socket.on('choose-avatar', function (msg) {
+    var choice = chance.pick(msg.avatars);
+    socket.emit('avatar-choice', {avatar: choice});
+});
+
 var WIDTH_TO_HEIGHT = 125/182;
 var svg = d3.select('svg');
 // var shuffled_deck = chance.shuffle(card_files);
