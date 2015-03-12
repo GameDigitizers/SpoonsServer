@@ -61,6 +61,10 @@ socket.on('choose-avatar', function (msg) {
     socket.emit('avatar-choice', {avatar: choice});
 });
 
+socket.on('hand', function (msg) {
+    console.log("I just got these cards", msg.hand);
+});
+
 var WIDTH_TO_HEIGHT = 125/182;
 var svg = d3.select('svg');
 // var shuffled_deck = chance.shuffle(card_files);

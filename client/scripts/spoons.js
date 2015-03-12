@@ -1,7 +1,7 @@
 $(function () {
-  $('#jump').click(function () {
-    console.log('JUMP!');
-    socket.emit('jump');
+  $('#ready').click(function () {
+    console.log('READY!');
+    socket.emit('player-ready', {ready: true});
   });
 });
 

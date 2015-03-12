@@ -5,6 +5,7 @@ var io = require('socket.io')(http);
 var _ =   require('lodash');
 var machina = require('machina');
 var chance = new require('chance')();
+var cards = require('./cards').card_files;
 
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/index.html');
@@ -31,8 +32,25 @@ var INITIAL_AVATARS = [
 
 var Player = function (game, socket) {
 
+  this.ready = false;
+
+  socket.on('player-ready', function (message) {
+    console.log("FIRST Player says his readiness is", message.ready);
+
+    this.ready = message.ready;
+  }.bind(this));
+
   this.chooseAvatar = function (available_avatars) {
     socket.emit('choose-avatar', { avatars: available_avatars }); 
+  }
+
+  this.set_hand = function (hand) {
+    console.log("Player " + socket.id + " has", hand);
+    this.hand = hand;
+
+    socket.emit('hand', {
+      hand: hand
+    });
   }
 
 }
@@ -63,10 +81,48 @@ var GameFsm = machina.Fsm.extend({
       },
 
       'avatar-choice': function (msg) {
-        console.log("Trying to tell chromecast about", msg);  
-        // chromecast.newPlayer(avatar);
+        console.log("Trying to tell chromecast about", msg);
+
+        this.chromecast_message({
+          type: 'new-player',
+          message: {
+            avatar: msg.avatar
+          }
+        });
+      },
+
+      'player-ready': function () {
+        var all_ready = _.every(this.players, function (player) {
+          return player.ready;
+        });
+
+        if (this.players.length > 1 && all_ready) {
+          this.transition('deal');
+        }
+      }
+    },
+
+    deal: {
+      _onEnter: function () {
+        this.chromecast_message('transition-to-table');
+        console.log("Need to do some dealing");
+
+        var deck = chance.shuffle(cards);
+        _.forEach(this.players, function (player) {
+          player.set_hand(deck.splice(0, 4));
+        });
       }
     }
+  },
+
+  chromecast_message: function (message_spec) {
+    _.forEach(this.chromecasts, function (chromecast) {
+      if (typeof(message_spec) === "string") {
+        chromecast.emit(message_spec);
+      } else {
+        chromecast.emit(message_spec.type, message_spec.message);
+      }
+    });
   },
 
   id: function () {
@@ -85,8 +141,11 @@ var GameFsm = machina.Fsm.extend({
     this.players.push(player);
 
     socket.on('jump', function (socket) {
-        chromecast.emit('jump');
-    });
+        this.chromecast_message({
+          type: 'jump',
+          message: {}
+        });
+    }.bind(this));
 
     socket.on('pass', function (card) {
       console.log('i should pass the card', card);
@@ -99,6 +158,11 @@ var GameFsm = machina.Fsm.extend({
     socket.on('avatar-choice', function (msg) {
       console.log('user wants to be', msg);
       this.handle('avatar-choice', msg);
+    }.bind(this));
+
+    socket.on('player-ready', function (message) {
+      console.log("Second player ready in GAME", message);
+      this.handle("player-ready");
     }.bind(this));
 
     this.handle('new-player', player);

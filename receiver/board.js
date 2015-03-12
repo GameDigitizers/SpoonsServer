@@ -103,7 +103,15 @@ function board(context) {
     socket.on('connect', function () {
       console.log('Emitting chromecast');
       socket.emit('i_am_chromecast');
-    })
+    });
+
+    socket.on('new-player', function (message) {
+      console.log("Just got word of a new player with avatar ", message.avatar);
+    });
+
+    socket.on('transition-to-table', function () {
+      console.log("time to play");
+    });
 
     var svg = d3.select('svg');
 
