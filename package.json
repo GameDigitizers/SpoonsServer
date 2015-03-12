@@ -3,10 +3,12 @@
   "version": "0.0.1",
   "description": "my first socket.io app",
   "dependencies": {
+    "chalk": "^1.0.0",
     "chance": "^0.7.3",
     "express": "4.10.2",
     "lodash": "^3.5.0",
     "machina": "^1.0.0-2",
-    "socket.io": "1.2.0"
+    "socket.io": "1.2.0",
+    "socket.io-events": "^0.4.6"
   }
 }
