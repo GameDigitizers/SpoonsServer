@@ -103,7 +103,15 @@ function board(context) {
     socket.on('connect', function () {
       console.log('Emitting chromecast');
       socket.emit('i_am_chromecast');
-    })
+    });
+
+    socket.on('new-player', function (message) {
+      console.log("Just got word of a new player with avatar ", message.avatar);
+    });
+
+    socket.on('transition-to-table', function () {
+      console.log("time to play");
+    });
 
     var svg = d3.select('svg');
 
@@ -130,7 +138,7 @@ function board(context) {
       { name: 'Trina Friesen',              avatar: 'zebra.png'     }
     ]
 
-    var number_of_players = 7;
+    var number_of_players = chance.integer({min: 3, max: potential_players.length});
     var players = chance.shuffle(potential_players).slice(0, number_of_players)
 
     // Margins set at 5%
