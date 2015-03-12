@@ -33,25 +33,81 @@ var INITIAL_AVATARS = [
   'zebra.png'
 ];
 
-var Player = function (game, socket) {
+// var Player = function (game, socket) {
 
-  this.ready = false;
-  this.socket_id = socket.id;
+//   this.ready = false;
+//   this.socket_id = socket.id;
 
-  this.chooseAvatar = function (available_avatars) {
-    socket.emit('choose-avatar', { avatars: available_avatars }); 
-  }
+// }
 
-  this.set_hand = function (hand) {
-    console.log("Player " + socket.id + " has", hand);
+var PlayerFsm = machina.BehavioralFsm.extend({
+
+  initialize: function (options) {
+    console.log(_.keys(options));
+    this.socket    = options.socket;
+    this.socket_id = options.socket.id;
+    this.ready     = false;
+    this.game      = options.game;
+
+    this.game.on('transition', function (data) {
+      console.log("The game transitioned", data);
+      if (data.toState == 'play') {
+        console.log("transitioning to play");
+        this.transition('play');
+        this.handle("dangit");
+      }
+    });
+  },
+
+  namespace: 'player',
+  initialState: 'waiting',
+
+  states: {
+    waiting: {
+      'player-ready': function (message) {
+        if (_.has(message, 'ready')) {
+          this.ready = message.ready;
+        }
+      },
+      'avatar-choice': function (msg) {
+        this.avatar = msg.avatar;
+        this.transition('play');
+      },
+      '*': function () {
+        console.log(chalk.red.bold("Nothing to do with this mofo"));
+      }
+    },
+    play: {
+      _onEnter: function () {
+        console.log("Player is ready to PLAY");
+      },
+      dangit: function () {
+        console.log(chalk.inverse.red("suckit"));
+      }
+    }
+  },
+
+  chooseAvatar: function (available_avatars) {
+    this.emit('choose-avatar', { avatars: available_avatars }); 
+  },
+
+  set_hand: function (hand) {
     this.hand = hand;
 
-    socket.emit('hand', {
+    this.emit('hand', {
       hand: hand
     });
-  }
+  },
 
-}
+  handle_message: function (type, message) {
+    this.handle(type, message);
+  },
+
+  emit: function (type, message) {
+    this.socket.emit(type, message);
+  },
+});
+
 
 var chromecast = null;
 
@@ -79,8 +135,6 @@ var GameFsm = machina.Fsm.extend({
       },
 
       'avatar-choice': function (msg) {
-        console.log("Trying to tell chromecast about", msg);
-
         this.chromecast_message({
           type: 'new-player',
           message: {
@@ -97,12 +151,12 @@ var GameFsm = machina.Fsm.extend({
         });
 
         if (this.players.length > 1 && all_ready) {
-          this.transition('deal');
+          this.transition('play');
         }
       }
     },
 
-    deal: {
+    play: {
       _onEnter: function () {
         this.chromecast_message('transition-to-table');
         console.log("Need to do some dealing");
@@ -139,14 +193,18 @@ var GameFsm = machina.Fsm.extend({
   handle_message: function (socket_id, type, message) {
     var message = message || {};
 
+    console.log(chalk.black("handle_message"), type, message);
     message.player = _.findWhere(this.players, {socket_id: socket_id});
 
-    console.log(chalk.black("handle_message"), type, message);
+    message.player.handle_message(type, message);
     this.handle(type, message);
   },
 
   new_player: function (socket) {
-    var player = new Player(this, socket);
+    var player = new PlayerFsm({
+      socket: socket,
+      game:   this
+    });
     this.players.push(player);
 
     this.handle('new-player', player);
@@ -203,8 +261,6 @@ router.on('*', function (socket, args, next) {
   }
 
   next();
-
-
 });
 
 io.use(router);

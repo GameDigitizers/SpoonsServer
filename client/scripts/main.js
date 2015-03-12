@@ -58,6 +58,7 @@ socket.emit('join-game', {game_id: 'SPOON'});
 
 socket.on('choose-avatar', function (msg) {
     var choice = chance.pick(msg.avatars);
+    console.log("I chose to be a", choice);
     socket.emit('avatar-choice', {avatar: choice});
 });
 
