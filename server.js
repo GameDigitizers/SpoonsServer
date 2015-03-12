@@ -6,6 +6,9 @@ var _ =   require('lodash');
 var machina = require('machina');
 var chance = new require('chance')();
 var cards = require('./cards').card_files;
+var router = require('socket.io-events')();
+var chalk = require('chalk');
+chalk.enabled = true;
 
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/index.html');
@@ -33,12 +36,7 @@ var INITIAL_AVATARS = [
 var Player = function (game, socket) {
 
   this.ready = false;
-
-  socket.on('player-ready', function (message) {
-    console.log("FIRST Player says his readiness is", message.ready);
-
-    this.ready = message.ready;
-  }.bind(this));
+  this.socket_id = socket.id;
 
   this.chooseAvatar = function (available_avatars) {
     socket.emit('choose-avatar', { avatars: available_avatars }); 
@@ -91,7 +89,9 @@ var GameFsm = machina.Fsm.extend({
         });
       },
 
-      'player-ready': function () {
+      'player-ready': function (message) {
+        message.player.ready = message.ready;
+
         var all_ready = _.every(this.players, function (player) {
           return player.ready;
         });
@@ -136,72 +136,78 @@ var GameFsm = machina.Fsm.extend({
     // this.handle('send-view')
   },
 
+  handle_message: function (socket_id, type, message) {
+    var message = message || {};
+
+    message.player = _.findWhere(this.players, {socket_id: socket_id});
+
+    console.log(chalk.black("handle_message"), type, message);
+    this.handle(type, message);
+  },
+
   new_player: function (socket) {
     var player = new Player(this, socket);
     this.players.push(player);
-
-    socket.on('jump', function (socket) {
-        this.chromecast_message({
-          type: 'jump',
-          message: {}
-        });
-    }.bind(this));
-
-    socket.on('pass', function (card) {
-      console.log('i should pass the card', card);
-    });
-
-    socket.on('keep', function (card) {
-      console.log('user is keeping card', card);
-    });
-
-    socket.on('avatar-choice', function (msg) {
-      console.log('user wants to be', msg);
-      this.handle('avatar-choice', msg);
-    }.bind(this));
-
-    socket.on('player-ready', function (message) {
-      console.log("Second player ready in GAME", message);
-      this.handle("player-ready");
-    }.bind(this));
 
     this.handle('new-player', player);
   }
 });
 
-var active_games = {};
+var active_games = {}; // <game_id>: <GameFsm object>
+var socket_to_game = {}; // <socket_id>: <GameFsm object>
 
-io.on('connection', function(socket){
-  console.log('CONNECTED');
-  
-  socket.on('i_am_chromecast', function(msg){
-    console.log("SOMEONE CLAIMS TO BE A CHROMECAST");
+router.on('i_am_chromecast', function (socket, args, next) {
+  var msg = args[1];
+  console.log(chalk.green('New chromecast'));
 
-    if (msg && msg.game_id) {
+  if (msg && msg.game_id) {
 
+  } else {
+    // This is a new game
+    game = new GameFsm();
+    console.log("Made a new game with id", chalk.cyan.bold(game.id()));
+    active_games[game.id()] = game;
+
+    socket.emit('game-id', {id: game.id()});
+
+    game.new_cast(socket);
+  }
+
+  // By not calling next(), the event is consumed.
+});
+
+router.on('join-game', function (socket, args, next) {
+  console.log(chalk.green.bold("join-game"), args);
+
+  var msg = args[1];
+
+  if (msg && msg.game_id) {
+    console.log("A client wants to join " + msg.game_id);
+
+    if (_.has(active_games, msg.game_id)) {
+      socket_to_game[socket.id] = active_games[msg.game_id];
+      active_games[msg.game_id].new_player(socket);
     } else {
-      // This is a new game
-      game = new GameFsm();
-      console.log("Made a new game with id", game.id());
-      active_games[game.id()] = game;
-
-      socket.emit('game-id', {id: game.id()});
-
-      game.new_cast(socket);
+      console.error("TODO: tell client there's no such game");
     }
-  });
+  }
 
-  socket.on('join-game', function (msg) {
-    if (msg && msg.game_id) {
-      console.log("A client wants to join " + msg.game_id);
+  // By not calling next(), the event is consumed.
+});
 
-      if (_.has(active_games, msg.game_id)) {
-        active_games[msg.game_id].new_player(socket);
-      }
-    }
-  });
+router.on('*', function (socket, args, next) {
+  console.log(chalk.green.bold("Routered"), args);
+
+  if (_.has(socket_to_game, socket.id)) {
+    socket_to_game[socket.id].handle_message(socket.id, args[0], args[1]);
+  }
+
+  next();
+
 
 });
+
+io.use(router);
 
 // In case paths start conflicting
 // app.use('/static', express.static(__dirname + '/public'));
