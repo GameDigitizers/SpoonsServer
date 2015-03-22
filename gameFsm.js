@@ -80,6 +80,14 @@ exports.GameFsm = machina.Fsm.extend({
         _.forEach(this.players, function (player) {
           player.set_hand(deck.splice(0, 4));
         });
+
+        this.players[0].incoming_cards(deck);
+
+        // Tell everyone who to pass to
+        this.players[this.players.length-1].next_player(this.players[0]);
+        for (i = 1; i < this.players.length; i++) {
+          this.players[i-1].next_player(this.players[i]);
+        }
       }
     }
   },

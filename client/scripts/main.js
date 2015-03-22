@@ -66,6 +66,18 @@ socket.on('hand', function (msg) {
     console.log("I just got these cards", msg.hand);
 });
 
+socket.on('incoming-available', function (msg) {
+    console.log("Something tells me there", (msg.available ? "are" : "aren't"), "cards to draw");
+
+    if (msg.available) {
+        socket.emit("pull-card");
+    }
+});
+
+socket.on('new-card', function (msg) {
+    console.log("I just picked up a", msg.card);
+});
+
 var WIDTH_TO_HEIGHT = 125/182;
 var svg = d3.select('svg');
 // var shuffled_deck = chance.shuffle(card_files);
