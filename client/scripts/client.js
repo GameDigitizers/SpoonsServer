@@ -204,12 +204,16 @@ var client_fsm = new machina.Fsm({
           .enter()
           .append('svg:image')
             .attr('id', function (theCard) {
-                return theCard.id;
+              return theCard.id;
             })
             .attr('class', 'the-pending-card')
             .attr('xlink:href', function (theCard) {
-                return 'images/' + theCard.src;
-            });
+              return 'images/' + theCard.src;
+            })
+            .on('click', function (theCard) {
+              d3.select('.the-pending-card').remove();
+              this.socket.emit('pass', theCard);
+            }.bind(this));
         this.draw_pending_card(pending_cards);
       },
 
