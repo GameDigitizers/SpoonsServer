@@ -46,14 +46,26 @@ var client_fsm = new machina.Fsm({
       this.handle('card-change');
     }.bind(this));
 
-    this.resize();
+    this.socket.on('incoming-available', function (msg) {
+      console.log("Something tells me there", (msg.available ? "are" : "aren't"), "cards to draw");
+
+      this.handle('available-cards', msg.available);
+    }.bind(this));
+
+    this.socket.on('new-card', function (msg) {
+      console.log("I just picked up a", msg.card);
+
+      this.handle('new-card', msg.card);
+    }.bind(this));
+
+    this.resize_recalc();
   },
 
   namespace: 'spoons-client',
 
   initialState: 'need-game',
 
-  resize: function () {
+  resize_recalc: function () {
     this.width = $('svg').width();
     this.height = $('svg').height();
 
@@ -74,47 +86,30 @@ var client_fsm = new machina.Fsm({
     this.hand_spacing = (this.width - this.card_width*this.hand.cards.length)/(this.hand.cards.length+1);
   },
 
-  drawHand: function () {
-    // card_width = .2*width;
-    dataSelection = this.handSelection.selectAll('.card')
-        .data(this.hand.cards);
-
-    dataSelection
-        .enter()
-        .append('svg:image')
-        .attr('id', function (theCard) {
-            return theCard.id;
-        })
-        .attr('class', 'card')
+  drawHand: function (image_selection) {
+    image_selection
         .attr('x', function (theCard, index) {
             return index*this.card_width + this.hand_spacing*(index+1);
         }.bind(this))
         .attr('y', this.height - this.card_height)
         .attr('width', this.card_width)
-        .attr('height', this.card_height)
-        .attr('xlink:href', function (theCard) {
-            return 'images/' + theCard.src;
-        });
+        .attr('height', this.card_height);
+
+    this.next_card
+        .attr('x', -(this.pending_card_width / 2))
+        .attr('y', 0.4 * this.height - this.pending_card_height/2)
+        .attr('width', this.pending_card_width)
+        .attr('height', this.pending_card_height);
 
 
-    // newCardDataSelection = newCardSelection
-    //     .selectAll('.the-pending-card')
-    //     .data(pending_cards);
+  },
 
-    // newCardDataSelection
-    //     .enter()
-    //     .append('svg:image')
-    //     .attr('id', function (theCard) {
-    //         return theCard.id;
-    //     })
-    //     .attr('class', 'the-pending-card')
-    //     .attr('x', width/2 - pending_card_width/2)
-    //     .attr('y', .4*height - pending_card_height/2)
-    //     .attr('width', pending_card_width)
-    //     .attr('height', pending_card_height)
-    //     .attr('xlink:href', function (theCard) {
-    //         return 'images/' + theCard.src;
-    //     });
+  draw_pending_card: function (pending_selection) {
+    pending_selection
+      .attr('x', this.width / 2 - this.pending_card_width/2)
+      .attr('y', 0.4 * this.height - this.pending_card_height/2)
+      .attr('width', this.pending_card_width)
+      .attr('height', this.pending_card_height);
   },
 
   states: {
@@ -162,16 +157,84 @@ var client_fsm = new machina.Fsm({
         console.log("in before-start");
         this.socket.emit('player-ready', {ready: true});
 
-        this.svg.selectAll().remove();
+        this.svg.selectAll('.avatar').remove();
 
         this.handSelection = this.svg.append('g')
           .attr('class', 'hand');
+
+        // Add draw card card
+        this.next_card = this.svg.append('g')
+            .attr('id', 'draw-button')
+            .append('svg:image')
+            .style('display', 'none')
+            .attr('xlink:href', 'images/blueGrid.png')
+            .on('click', function () {
+              this.socket.emit('pull-card');
+            }.bind(this));
+
+        // Add the pending card
+        this.pending_card_g = this.svg.append('g')
+            .attr('class', 'pending-card');
       },
 
       'card-change': function () {
         console.log("Drawing hand");
-        this.drawHand();
+        dataSelection = this.handSelection.selectAll('.card')
+            .data(this.hand.cards);
+
+        image_selection = dataSelection
+            .enter()
+            .append('svg:image')
+              .attr('id', function (theCard) {
+                return theCard.id;
+              })
+              .attr('class', 'card')
+              .attr('xlink:href', function (theCard) {
+                return 'images/' + theCard.src;
+              });
+
+
+        this.drawHand(image_selection);
+      },
+
+      'new-card': function (card) {
+        pending_cards = this.pending_card_g
+          .selectAll('.the-pending-card')
+          .data([card])
+          .enter()
+          .append('svg:image')
+            .attr('id', function (theCard) {
+                return theCard.id;
+            })
+            .attr('class', 'the-pending-card')
+            .attr('xlink:href', function (theCard) {
+                return 'images/' + theCard.src;
+            });
+        this.draw_pending_card(pending_cards);
+      },
+
+      'resize': function () {
+        console.log("fsm resize");
+        this.resize_recalc();
+
+        // debugger;
+        this.drawHand(d3.selectAll('.card'));
+        this.draw_pending_card(d3.selectAll('.the-pending-card'));
+      },
+
+      'available-cards': function (available) {
+        console.log("in available-cards");
+        if (available) {
+          this.next_card.style('display', null);
+        } else {
+          this.next_card.style('display', 'none');
+        }
       }
     }
   }
+});
+
+$(window).resize(function () {
+    console.log('resizing');
+    client_fsm.handle('resize');
 });
