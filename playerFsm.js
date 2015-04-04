@@ -65,8 +65,6 @@ exports.PlayerFsm = machina.Fsm.extend({
         console.log("Player wants to pass", _.keys(data));
 
         var pass_index = _.findIndex(this.hand, 'id', data.id);
-        console.log(chalk.red.bold("HACKING TAKE THIS OUT"));
-        pass_index = 0;
 
         if (pass_index > -1) {
           var card = this.hand.splice(pass_index, 1)[0];
