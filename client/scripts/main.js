@@ -53,6 +53,31 @@ var card_files = [
     "queen_of_spades2.png"];
 
 var socket = io();
+
+socket.emit('join-game', {game_id: 'SPOON'});
+
+socket.on('choose-avatar', function (msg) {
+    var choice = chance.pick(msg.avatars);
+    console.log("I chose to be a", choice);
+    socket.emit('avatar-choice', {avatar: choice});
+});
+
+socket.on('hand', function (msg) {
+    console.log("I just got these cards", msg.hand);
+});
+
+socket.on('incoming-available', function (msg) {
+    console.log("Something tells me there", (msg.available ? "are" : "aren't"), "cards to draw");
+
+    if (msg.available) {
+        socket.emit("pull-card");
+    }
+});
+
+socket.on('new-card', function (msg) {
+    console.log("I just picked up a", msg.card);
+});
+
 var WIDTH_TO_HEIGHT = 125/182;
 var svg = d3.select('svg');
 // var shuffled_deck = chance.shuffle(card_files);
