@@ -54,6 +54,7 @@ var client_fsm = new machina.Fsm({
 
     this.socket.on('new-card', function (msg) {
       console.log("I just picked up a", msg.card);
+      console.log(this.hand);
 
       this.handle('new-card', msg.card);
     }.bind(this));
@@ -87,7 +88,7 @@ var client_fsm = new machina.Fsm({
   },
 
   drawHand: function (image_selection) {
-    image_selection
+    return image_selection
         .attr('x', function (theCard, index) {
             return index*this.card_width + this.hand_spacing*(index+1);
         }.bind(this))
@@ -198,8 +199,12 @@ var client_fsm = new machina.Fsm({
         // Add the pending card
         this.pending_card_g = this.svg.append('g')
             .attr('class', 'pending-card');
-      },
 
+        this.transition('play');
+      },
+    },
+
+    play: {
       'card-change': function () {
         console.log("Drawing hand");
         dataSelection = this.handSelection.selectAll('.card')
@@ -293,8 +298,101 @@ var client_fsm = new machina.Fsm({
 
         this.card_count_change();
         this.drawHand(d3.selectAll('.card'));
+
+        this.discardAnimate();
+      }
+    },
+
+    'post-kept-animation': {
+      _onEnter: function () {
+        this.card_count_change();
+
+        var n = 0;
+
+        this.drawHand(d3.selectAll('.card')
+            .transition()
+            .ease('linear')
+            .duration(250)
+            .each(function() { ++n; })
+            .each("end", function() { 
+              if (!--n) {
+                this.transition('play');
+              }
+           }.bind(this)));
+
+        this.transition('play');
       }
     }
+  },
+
+  discardAnimate: function () {
+    setTimeout(function () {
+      var that = this;
+
+      this.handSelection.selectAll('.card')
+        .transition()
+        // .attr('transform', function (theCard, index) {
+        .attr('x', function (theCard, index) {
+            var hammerTime = new Hammer($(this)[0]);
+            hammerTime.on('tap', function (evt) {
+            // hammerTime.on('swiperight', function (evt) {
+                console.log('swiperight', that.hand.cardById(evt.target.id));
+                console.log(evt);
+
+                var pass_card = that.hand.cardById(evt.target.id)
+
+                d3.select(evt.target).remove();
+                
+                that.socket.emit('pass', pass_card);
+
+                _.remove(that.hand.cards, function (card) {
+                  return card.id === pass_card.id;
+                });
+
+                console.log(that.hand);
+
+                //remove this gesture listener
+                hammerTime.destroy();
+                that.transition('post-kept-animation');
+            });
+
+            var elem = d3.select(this);
+            var oldX = elem.attr('x');
+            console.log(oldX);
+            var oldY = elem.attr('y')
+            console.log(oldY);
+            // give the cards 90% of the height, and split the other 10% for the spacing
+            var pass_card_height = that.height * .8/that.hand.cards.length;
+            var pass_card_space_height = (that.height * .2)/(that.hand.cards.length+1);
+
+            // set the cards' width based on their height (and the card width:height ratio)
+            var pass_card_width = pass_card_height * WIDTH_TO_HEIGHT;
+
+            var pass_card_x = that.width/2 - pass_card_width/2; // - oldX;
+            var pass_card_y = index*pass_card_height + pass_card_space_height*(index+1); // - oldY;
+            return pass_card_x;
+        })  
+        .attr('y', function (theCard, index) {
+            var elem = d3.select(this);
+            var oldX = elem.attr('x');
+            console.log(oldX);
+            var oldY = elem.attr('y')
+            console.log(oldY);
+            // give the cards 90% of the height, and split the other 10% for the spacing
+            var pass_card_height = that.height * .8/that.hand.cards.length;
+            var pass_card_space_height = (that.height * .2)/(that.hand.cards.length+1);
+
+            // set the cards' width based on their height (and the card width:height ratio)
+            var pass_card_width = pass_card_height * WIDTH_TO_HEIGHT;
+
+            var pass_card_x = that.width/2 - pass_card_width/2; // - oldX;
+            var pass_card_y = index*pass_card_height + pass_card_space_height*(index+1); // - oldY;
+            return pass_card_y;
+            
+        })
+        .ease('linear')
+        .duration(250);
+    }.bind(this), 250);
   }
 });
 

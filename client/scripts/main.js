@@ -292,8 +292,8 @@ mc.on('swipedown', function (evt) {
     setTimeout(function () {
         handSelection.selectAll('.card')
         .transition()
-        .attr('transform', function (theCard, index) {
-            console.log('translating:', theCard, index);
+        // .attr('transform', function (theCard, index) {
+        .attr('x', function (theCard, index) {
             var hammerTime = new Hammer($(this)[0]);
             hammerTime.on('swiperight', function (evt) {
                 console.log('swiperight');
@@ -305,9 +305,11 @@ mc.on('swipedown', function (evt) {
                 hammerTime.destroy();
                 // TODO: should now put the cards back into the 4 on the bottom layout
             });
-            var oldX = d3.select(this).attr('x');
+
+            var elem = d3.select(this);
+            var oldX = elem.attr('x');
             console.log(oldX);
-            var oldY = d3.select(this).attr('y')
+            var oldY = elem.attr('y')
             console.log(oldY);
             // give the cards 90% of the height, and split the other 10% for the spacing
             var pass_card_height = height * .8/hand.cards.length;
@@ -316,12 +318,49 @@ mc.on('swipedown', function (evt) {
             // set the cards' width based on their height (and the card width:height ratio)
             var pass_card_width = pass_card_height * WIDTH_TO_HEIGHT;
 
-            var pass_card_x = width/2 - pass_card_width/2 - oldX;
-            var pass_card_y = index*pass_card_height + pass_card_space_height*(index+1) - oldY;
-            var returnVal = 'translate('+pass_card_x+','+pass_card_y+')';
-            console.log(returnVal);
-            return returnVal;
+            var pass_card_x = width/2 - pass_card_width/2; // - oldX;
+            var pass_card_y = index*pass_card_height + pass_card_space_height*(index+1); // - oldY;
+            return pass_card_x;
+        })  
+        .attr('y', function (theCard, index) {
+            var elem = d3.select(this);
+            var oldX = elem.attr('x');
+            console.log(oldX);
+            var oldY = elem.attr('y')
+            console.log(oldY);
+            // give the cards 90% of the height, and split the other 10% for the spacing
+            var pass_card_height = height * .8/hand.cards.length;
+            var pass_card_space_height = (height * .2)/(hand.cards.length+1);
+
+            // set the cards' width based on their height (and the card width:height ratio)
+            var pass_card_width = pass_card_height * WIDTH_TO_HEIGHT;
+
+            var pass_card_x = width/2 - pass_card_width/2; // - oldX;
+            var pass_card_y = index*pass_card_height + pass_card_space_height*(index+1); // - oldY;
+            return pass_card_y;
+            
         })
+        //     // console.log('translating:', theCard, index);
+        //     var elem = d3.select(this);
+        //     var oldX = elem.attr('x');
+        //     console.log(oldX);
+        //     var oldY = elem.attr('y')
+        //     console.log(oldY);
+        //     // give the cards 90% of the height, and split the other 10% for the spacing
+        //     var pass_card_height = height * .8/hand.cards.length;
+        //     var pass_card_space_height = (height * .2)/(hand.cards.length+1);
+
+        //     // set the cards' width based on their height (and the card width:height ratio)
+        //     var pass_card_width = pass_card_height * WIDTH_TO_HEIGHT;
+
+        //     var pass_card_x = width/2 - pass_card_width/2; // - oldX;
+        //     var pass_card_y = index*pass_card_height + pass_card_space_height*(index+1); // - oldY;
+        //     // elem.attr('x', pass_card_x);
+        //     // elem.attr('y', pass_card_y);
+        //     // var returnVal = 'translate('+pass_card_x+','+pass_card_y+')';
+        //     // console.log(returnVal);
+        //     // return returnVal;
+        // })
         .ease('linear')
         .duration(500);
     }, 250);
