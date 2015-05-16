@@ -237,6 +237,15 @@ var client_fsm = new machina.Fsm({
               d3.select('.the-pending-card').remove();
               this.socket.emit('pass', theCard);
             }.bind(this));
+
+        var mc = new Hammer($('.the-pending-card')[0]);
+        mc.get('swipe').set({ direction: Hammer.DIRECTION_ALL });
+
+        mc.on('swipedown', function (evt) {
+          this.keep_card = card;
+          this.transition('keep-card', card);
+        }.bind(this));
+
         this.draw_pending_card(pending_cards);
       },
 
@@ -256,6 +265,34 @@ var client_fsm = new machina.Fsm({
         } else {
           this.next_card.style('display', 'none');
         }
+      }
+    },
+
+    'keep-card': {
+      _onEnter: function () {
+        console.log("keep card _onEnter", this.keep_card);
+
+        this.hand.cards.push(this.keep_card);
+        console.log(this.hand);
+
+        dataSelection = this.handSelection.selectAll('.card')
+            .data(this.hand.cards);
+
+        image_selection = dataSelection
+            .enter()
+            .append('svg:image')
+              .attr('id', function (theCard) {
+                return theCard.id;
+              })
+              .attr('class', 'card')
+              .attr('xlink:href', function (theCard) {
+                return 'images/' + theCard.src;
+              });
+
+        d3.select('.the-pending-card').remove();
+
+        this.card_count_change();
+        this.drawHand(d3.selectAll('.card'));
       }
     }
   }
