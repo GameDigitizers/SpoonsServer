@@ -23,9 +23,9 @@ var client_fsm = new machina.Fsm({
       'zebra.png'
     ];
 
+    this.resizers = [];
+
     this.svg = d3.select('svg');
-    this.svg_width = $('svg').width();
-    this.svg_height = $('svg').height();
 
     this.socket = io();
 
@@ -95,13 +95,43 @@ var client_fsm = new machina.Fsm({
         .attr('width', this.card_width)
         .attr('height', this.card_height);
 
-    this.next_card
-        .attr('x', -(this.pending_card_width / 2))
-        .attr('y', 0.4 * this.height - this.pending_card_height/2)
-        .attr('width', this.pending_card_width)
-        .attr('height', this.pending_card_height);
 
 
+  },
+
+  build_draw_card: function () {
+    this.next_card = this.svg.append('g')
+        .attr('id', 'draw-button')
+        .append('svg:image')
+        .style('display', 'none')
+        .attr('xlink:href', 'images/blueGrid.png')
+        .on('click', function () {
+          this.socket.emit('pull-card');
+        }.bind(this));
+
+    var resize = function () {
+      this.next_card
+          .attr('x', -(this.pending_card_width / 2))
+          .attr('y', 0.4 * this.height - this.pending_card_height/2)
+          .attr('width', this.pending_card_width)
+          .attr('height', this.pending_card_height);
+    }.bind(this);
+
+    this.register_resizer(resize);
+
+    resize();
+  },
+
+  register_resizer: function (resizer) {
+    this.resizers.push(resizer);
+  },
+
+  resize: function () {
+    this.resize_recalc();
+
+    _.forEach(this.resizers, function (resizer) {
+      resizer();
+    });
   },
 
   draw_pending_card: function (pending_selection) {
@@ -163,14 +193,7 @@ var client_fsm = new machina.Fsm({
           .attr('class', 'hand');
 
         // Add draw card card
-        this.next_card = this.svg.append('g')
-            .attr('id', 'draw-button')
-            .append('svg:image')
-            .style('display', 'none')
-            .attr('xlink:href', 'images/blueGrid.png')
-            .on('click', function () {
-              this.socket.emit('pull-card');
-            }.bind(this));
+        this.build_draw_card();
 
         // Add the pending card
         this.pending_card_g = this.svg.append('g')
@@ -217,14 +240,14 @@ var client_fsm = new machina.Fsm({
         this.draw_pending_card(pending_cards);
       },
 
-      'resize': function () {
-        console.log("fsm resize");
-        this.resize_recalc();
+      // 'resize': function () {
+      //   console.log("fsm resize");
+      //   this.resize_recalc();
 
-        // debugger;
-        this.drawHand(d3.selectAll('.card'));
-        this.draw_pending_card(d3.selectAll('.the-pending-card'));
-      },
+      //   // debugger;
+      //   this.drawHand(d3.selectAll('.card'));
+      //   this.draw_pending_card(d3.selectAll('.the-pending-card'));
+      // },
 
       'available-cards': function (available) {
         console.log("in available-cards");
@@ -240,5 +263,5 @@ var client_fsm = new machina.Fsm({
 
 $(window).resize(function () {
     console.log('resizing');
-    client_fsm.handle('resize');
+    client_fsm.resize();
 });
