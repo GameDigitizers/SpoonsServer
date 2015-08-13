@@ -17,54 +17,77 @@ app.get('/', function(req, res){
 
 // var chromecast = null;
 
-var active_games = {}; // <game_id>: <GameFsm object>
-var socket_to_game = {}; // <socket_id>: <GameFsm object>
-
-router.on('i_am_chromecast', function (socket, args, next) {
-  var msg = args[1];
-  console.log(chalk.green('New chromecast'));
-
-  if (msg && msg.game_id) {
-
-  } else {
-    // This is a new game
-    game = new GameFsm();
-    console.log("Made a new game with id", chalk.cyan.bold(game.id()));
-    active_games[game.id()] = game;
-
-    socket.emit('game-id', {id: game.id()});
-
-    game.new_cast(socket);
+var GameManager = (function () {
+  var activeGames = {}; // <gameId>: <GameFsm object>
+  var socketToGame = {}; // <socket_id>: <GameFsm object>
+  
+  function handleMessage (args) {
+    if (_.has(socketToGame, args.socketId)) {
+      socketToGame[args.socketId].handleMessage(args);
+    } else {
+      console.error('WTF?');
+    }
   }
 
+  function startGame (args) {
+    var game = null;
+
+    if (_.has(activeGames, args.msg.gameId)) {
+      console.log("A client wants to join " + args.msg.gameId);
+
+      game = activeGames[args.msg.gameId];
+      socketToGame[args.socket.id] = activeGames[args.msg.gameId];
+    } else {
+      // This is a new game
+      game = new GameFsm(args.msg.gameId);
+      console.log("Made a new game with id", chalk.cyan.bold(game.id()));
+      activeGames[game.id()] = game;
+    }
+
+    if (args.type === 'cast') {
+      game.newCast(args.socket);
+    } else {
+      game.newPlayer(args.socket);
+    }
+  }
+
+  return {
+    handleMessage: handleMessage,
+    startGame: startGame,
+  };
+})();
+
+
+router.on('i_am_chromecast', function (socket, args, next) {
+  console.log(chalk.green('New chromecast'));
+
+  GameManager.startGame({
+    msg: args[1],
+    socket: socket,
+    type: 'cast',
+  });
   // By not calling next(), the event is consumed.
 });
 
 router.on('join-game', function (socket, args, next) {
   console.log(chalk.green.bold("join-game"), args);
 
-  var msg = args[1];
-
-  if (msg && msg.game_id) {
-    console.log("A client wants to join " + msg.game_id);
-
-    if (_.has(active_games, msg.game_id)) {
-      socket_to_game[socket.id] = active_games[msg.game_id];
-      active_games[msg.game_id].new_player(socket);
-    } else {
-      console.error("TODO: tell client there's no such game");
-    }
-  }
+  GameManager.startGame({
+    msg: args[1],
+    socket: socket,
+    type: 'player',
+  });
 
   // By not calling next(), the event is consumed.
 });
 
 router.on('*', function (socket, args, next) {
   console.log(chalk.green.bold("Routered"), args);
-
-  if (_.has(socket_to_game, socket.id)) {
-    socket_to_game[socket.id].handle_message(socket.id, args[0], args[1]);
-  }
+  GameManager.handleMessage({
+    socketId: socket.id,
+    type: args[0],
+    msg: args[1],
+  });
 
   next();
 });

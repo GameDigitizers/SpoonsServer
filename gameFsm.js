@@ -27,7 +27,9 @@ var INITIAL_AVATARS = [
 ];
 
 exports.GameFsm = machina.Fsm.extend({
-  initialize: function () {
+  initialize: function (gameId ) {
+    console.log('In GameFSM initialize ', gameId);
+
     this.chromecasts = [];
     this.players = [];
 
@@ -37,7 +39,7 @@ exports.GameFsm = machina.Fsm.extend({
     //   length:5,
     //   pool:"ABCDEFGHJKLMNPQRSTUVWXYZ123456789"
     // });
-    this.game_id = "SPOON";
+    this.game_id = gameId;
   },
 
   namespace: 'spoons',
@@ -106,24 +108,24 @@ exports.GameFsm = machina.Fsm.extend({
     return this.game_id;
   },
 
-  new_cast: function (chromecast) {
+  newCast: function (chromecast) {
     console.log("Just met a new chromecast", chromecast.id);
     this.chromecasts.push(chromecast);
 
     // this.handle('send-view')
   },
 
-  handle_message: function (socket_id, type, message) {
-    var message = message || {};
+  handleMessage: function (args) {
+    var message = args.msg || {};
 
-    console.log(chalk.black("handle_message"), type, message);
-    message.player = _.findWhere(this.players, {socket_id: socket_id});
+    console.log(chalk.black("handleMessage"), args.type, message);
+    message.player = _.findWhere(this.players, {socket_id: args.socketId});
 
-    message.player.handle_message(type, message);
-    this.handle(type, message);
+    message.player.handle_message(args.type, message);
+    this.handle(args.type, message);
   },
 
-  new_player: function (socket) {
+  newPlayer: function (socket) {
     var player = new PlayerFsm({
       socket: socket,
       game:   this
