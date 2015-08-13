@@ -35,7 +35,6 @@ var GameManager = (function () {
       console.log("A client wants to join " + args.msg.gameId);
 
       game = activeGames[args.msg.gameId];
-      socketToGame[args.socket.id] = activeGames[args.msg.gameId];
     } else {
       // This is a new game
       game = new GameFsm(args.msg.gameId);
@@ -43,6 +42,8 @@ var GameManager = (function () {
       activeGames[game.id()] = game;
     }
 
+    socketToGame[args.socket.id] = activeGames[args.msg.gameId];
+    
     if (args.type === 'cast') {
       game.newCast(args.socket);
     } else {
