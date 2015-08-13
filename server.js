@@ -1,3 +1,4 @@
+'use strict';
 var express = require('express');
 var app = express();
 var http = require('http').Server(app);
@@ -14,7 +15,7 @@ app.get('/', function(req, res){
   res.sendFile(__dirname + '/index.html');
 });
 
-var chromecast = null;
+// var chromecast = null;
 
 var active_games = {}; // <game_id>: <GameFsm object>
 var socket_to_game = {}; // <socket_id>: <GameFsm object>
