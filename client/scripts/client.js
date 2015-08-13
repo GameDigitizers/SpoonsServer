@@ -59,6 +59,12 @@ var client_fsm = new machina.Fsm({
       this.handle('new-card', msg.card);
     }.bind(this));
 
+    this.socket.on('choose-avatar', function (msg) {
+      console.log("choose-avatar");
+
+      this.transition('pick-avatar');
+    }.bind(this));
+
     this.resize_recalc();
   },
 
@@ -148,10 +154,10 @@ var client_fsm = new machina.Fsm({
       _onEnter: function () {
         // Eventually need a view for this
         this.socket.emit('join-game', {
-          game_id: 'SPOON'
+          gameId: window.location.hash
         });
 
-        this.transition('pick-avatar');
+        // this.transition('pick-avatar');
       }
     },
 
