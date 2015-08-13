@@ -27,19 +27,19 @@ var INITIAL_AVATARS = [
 ];
 
 exports.GameFsm = machina.Fsm.extend({
-  initialize: function (gameId ) {
+  initialize: function (io, gameId) {
     console.log('In GameFSM initialize ', gameId);
+
+    this.io = io;
 
     this.chromecasts = [];
     this.players = [];
 
     this.available_avatars = INITIAL_AVATARS;
 
-    // this.game_id = chance.string({
-    //   length:5,
-    //   pool:"ABCDEFGHJKLMNPQRSTUVWXYZ123456789"
-    // });
-    this.game_id = gameId;
+    this.gameId = gameId;
+
+    this.spoonsTaken = 0;
   },
 
   namespace: 'spoons',
@@ -78,6 +78,8 @@ exports.GameFsm = machina.Fsm.extend({
         this.chromecast_message('transition-to-table');
         console.log("Need to do some dealing");
 
+        this.io.to(this.gameId).emit('play');
+
         var deck = chance.shuffle(cards);
         _.forEach(this.players, function (player) {
           player.set_hand(deck.splice(0, 4));
@@ -86,10 +88,34 @@ exports.GameFsm = machina.Fsm.extend({
         this.players[0].incoming_cards(deck);
 
         // Tell everyone who to pass to
-        this.players[this.players.length-1].next_player(this.players[0]);
+        this.players[this.players.length-1].next_player = this.players[0];
         for (i = 1; i < this.players.length; i++) {
-          this.players[i-1].next_player(this.players[i]);
+          this.players[i-1].next_player = this.players[i];
         }
+      },
+
+      'take-spoon': function () {
+        this.spoonsTaken++;
+
+        // tell the clients? who knows?
+
+        // todo tell chromecast
+
+        // todo 
+        if (this.spoonsTaken == this.players.length - 1) {
+          // we're done ... do something
+          this.io.to(this.gameId).emit('game-end');
+          this.transition('lobby');
+        }
+      },
+
+      _onExit: function () {
+        this.spoonsTaken = 0;
+        this.players.forEach(function (player) {
+          console.log(player);
+          player.ready = false;
+          player.next_player = null;
+        });
       }
     }
   },
@@ -105,7 +131,7 @@ exports.GameFsm = machina.Fsm.extend({
   },
 
   id: function () {
-    return this.game_id;
+    return this.gameId;
   },
 
   newCast: function (chromecast) {
@@ -131,6 +157,8 @@ exports.GameFsm = machina.Fsm.extend({
       game:   this
     });
     this.players.push(player);
+
+    player.socket.join(this.gameId);
 
     this.handle('new-player', player);
   }

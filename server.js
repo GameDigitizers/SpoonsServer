@@ -38,7 +38,7 @@ var GameManager = (function () {
       game = activeGames[args.msg.gameId];
     } else {
       // This is a new game
-      game = new GameFsm(args.msg.gameId);
+      game = new GameFsm(io, args.msg.gameId);
       console.log("Made a new game with id", chalk.cyan.bold(game.id()));
       activeGames[game.id()] = game;
     }
@@ -70,30 +70,35 @@ router.on('i_am_chromecast', function (socket, args, next) {
   // By not calling next(), the event is consumed.
 });
 
-router.on('join-game', function (socket, args, next) {
-  console.log(chalk.green.bold("join-game"), args);
-
-  GameManager.startGame({
-    msg: args[1],
-    socket: socket,
-    type: 'player',
-  });
-
-  // By not calling next(), the event is consumed.
-});
-
 router.on('*', function (socket, args, next) {
   console.log(chalk.green.bold("Routered"), args);
-  GameManager.handleMessage({
-    socketId: socket.id,
-    type: args[0],
-    msg: args[1],
-  });
+
+  // Don't pass join-game calls on to gameFsm, the io.connection stuff should
+  // handle it since socket-io.events (the route stuff) passes incomplete sockets
+  if (args[0] !== 'join-game') {
+    GameManager.handleMessage({
+      socketId: socket.id,
+      type: args[0],
+      msg: args[1],
+    });
+  }
 
   next();
 });
 
 io.use(router);
+
+io.on('connection', function  (socket) {
+  socket.on('join-game', function (args) {
+    console.log("is my socket good now?");
+    console.log(args);
+    GameManager.startGame({
+      msg: args,
+      socket: socket,
+      type: 'player',
+    });
+  });
+});
 
 // In case paths start conflicting
 // app.use('/static', express.static(__dirname + '/public'));

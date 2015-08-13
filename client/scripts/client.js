@@ -1,3 +1,4 @@
+'use strict';
 var WIDTH_TO_HEIGHT = 125 / 182;
 
 var client_fsm = new machina.Fsm({
@@ -27,6 +28,14 @@ var client_fsm = new machina.Fsm({
     this.svg = d3.select('svg');
 
     this.socket = io();
+
+    this.socket.on('game-end', function(message) {
+      this.transition('game-end');
+    }.bind(this));
+
+    this.socket.on('cheat', function(message) {
+      console.log('server called me a cheater');
+    }.bind(this));
 
     this.socket.on('hand', function(message) {
       this.hand = {
@@ -64,6 +73,10 @@ var client_fsm = new machina.Fsm({
       this.transition('pick-avatar');
     }.bind(this));
 
+    this.socket.on('play', function() {
+      this.transition('play');
+    }.bind(this));
+
     this.resize_recalc();
   },
 
@@ -74,6 +87,13 @@ var client_fsm = new machina.Fsm({
   resize_recalc: function() {
     this.width = $('svg').width();
     this.height = $('svg').height();
+
+    this.spoonSettings = {
+      width: 20,
+      height: 100,
+      x: this.width - 300,
+      y: 50
+    };
 
     if (this.width / this.height > WIDTH_TO_HEIGHT) {
       this.pending_card_height = .7 * this.height;
@@ -112,6 +132,11 @@ var client_fsm = new machina.Fsm({
       .style('display', 'none')
       .attr('xlink:href', 'images/blueGrid.png')
       .on('click', function() {
+        var pendingCard = d3.selectAll('.the-pending-card');
+        if (!pendingCard.empty()) { //if we don't already have a pending card then we request a new one (so no cheating and taking 2 right now)
+          this.socket.emit('pass', pendingCard.datum());
+          pendingCard.remove();
+        }
         this.socket.emit('pull-card');
       }.bind(this));
 
@@ -205,7 +230,12 @@ var client_fsm = new machina.Fsm({
         // this.transition('play');
 
         this.svg.append('text')
+          .classed('waiting', true)
+          .attr('y', 50)
           .text('Waiting for other players');
+      },
+      _onExit: function() {
+        this.svg.selectAll('.waiting').remove();
       },
     },
 
@@ -222,14 +252,45 @@ var client_fsm = new machina.Fsm({
         this.pending_card_g = this.svg.append('g')
           .attr('class', 'pending-card');
 
+        this.spoonImage = this.svg.append('svg:image')
+          .attr('xlink:href', function(theCard) {
+            return 'images/spoon.png';
+          })
+          .on('click', function() {
+            this.socket.emit('take-spoon');
+            this.spoonImage.remove();
+          }.bind(this));
+
+        var resize = function() {
+          this.spoonImage
+            .attr('x', this.spoonSettings.x)
+            .attr('y', this.spoonSettings.y)
+            .attr('width', this.spoonSettings.width)
+            .attr('height', this.spoonSettings.height);
+        }.bind(this);
+
+        this.register_resizer(resize);
+
+        resize();
+
+        d3.select('body')
+          .on('keydown', function () {
+            if (d3.event.keyCode === 39) { //arrow right
+              this.next_card.on('click')();
+            } else if (d3.event.keyCode === 40) { //arrow down
+              console.log('down');
+              this.keep_card = d3.selectAll('.the-pending-card').datum();
+              this.transition('keep-card', this.keep_card);
+            }
+          }.bind(this))
       },
 
       'card-change': function() {
         console.log("Drawing hand");
-        dataSelection = this.handSelection.selectAll('.card')
+        var dataSelection = this.handSelection.selectAll('.card')
           .data(this.hand.cards);
 
-        image_selection = dataSelection
+        var image_selection = dataSelection
           .enter()
           .append('svg:image')
           .attr('id', function(theCard) {
@@ -245,7 +306,7 @@ var client_fsm = new machina.Fsm({
       },
 
       'new-card': function(card) {
-        pending_cards = this.pending_card_g
+        var pending_cards = this.pending_card_g
           .selectAll('.the-pending-card')
           .data([card])
           .enter()
@@ -294,6 +355,27 @@ var client_fsm = new machina.Fsm({
       }
     },
 
+    'game-end': {
+      _onEnter: function() {
+        this.spoonImage.remove();
+        this.svg.append('text')
+          .classed('game-end', true)
+          .attr('x', this.width / 2)
+          .attr('y', this.height / 2)
+          .text('CLICK TO START NEW GAME!')
+          .on('click', function() {
+            // this.socket.emit('player-ready', {readytrue});
+            this.transition('before-start');
+          }.bind(this));
+      },
+      _onExit: function() {
+        d3.select('.game-end').remove();
+        this.handSelection.remove();
+        this.pending_card_g.remove();
+        this.next_card.remove();
+      }
+    },
+
     'keep-card': {
       _onEnter: function() {
         console.log("keep card _onEnter", this.keep_card);
@@ -301,10 +383,10 @@ var client_fsm = new machina.Fsm({
         this.hand.cards.push(this.keep_card);
         console.log(this.hand);
 
-        dataSelection = this.handSelection.selectAll('.card')
+        var dataSelection = this.handSelection.selectAll('.card')
           .data(this.hand.cards);
 
-        image_selection = dataSelection
+        var image_selection = dataSelection
           .enter()
           .append('svg:image')
           .attr('id', function(theCard) {

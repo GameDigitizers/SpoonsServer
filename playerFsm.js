@@ -47,13 +47,17 @@ exports.PlayerFsm = machina.Fsm.extend({
       },
 
       'pull-card': function () {
-        if (this.incoming.length > 0) {
-          var card = this.incoming.splice(0, 1)[0];
-          this.hand.push(card);
+        if (this.hand.length < 5) { // player already has pending card don't send more unless they are cleared to cheat
+          if (this.incoming.length > 0) {
+            var card = this.incoming.splice(0, 1)[0];
+            this.hand.push(card);
 
-          this.emit_message('new-card', { card: card });
+            this.emit_message('new-card', { card: card });
+          } else {
+            console.log(chalk.red.bold("Client asked for card but none available"));
+          }
         } else {
-          console.log(chalk.red.bold("Client asked for card but none available"));
+          this.socket.emit('cheat');
         }
 
         if (this.incoming.length == 0) {
@@ -99,10 +103,6 @@ exports.PlayerFsm = machina.Fsm.extend({
     this.emit_message('hand', {
       hand: hand
     });
-  },
-
-  next_player: function (player) {
-    this.next_player = player;
   },
 
   handle_message: function (type, message) {
