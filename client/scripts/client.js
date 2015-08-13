@@ -187,12 +187,12 @@ var client_fsm = new machina.Fsm({
             console.log("transitioning to before-start");
             this.transition('before-start');
           }.bind(this));
-      }
+      },
+      _onExit: function() {
+        this.svg.selectAll('.avatar').remove();
+      },
     },
 
-    _onExit: function() {
-      this.svg.selectAll('.avatar').remove();
-    },
 
     'before-start': {
       _onEnter: function() {
