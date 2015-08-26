@@ -236,12 +236,9 @@ var client_fsm = new machina.Fsm({
       },
       _onExit: function() {
         this.svg.selectAll('.waiting').remove();
-      },
-    },
 
-    play: {
-      _onEnter: function() {
-
+        // Do all the appending her in the on exit so that we don't reappend
+        // everytime we transition to play
         this.handSelection = this.svg.append('g')
           .attr('class', 'hand');
 
@@ -260,6 +257,12 @@ var client_fsm = new machina.Fsm({
             this.socket.emit('take-spoon');
             this.spoonImage.remove();
           }.bind(this));
+      },
+    },
+
+    play: {
+      _onEnter: function() {
+
 
         var resize = function() {
           this.spoonImage
@@ -435,32 +438,22 @@ var client_fsm = new machina.Fsm({
       var that = this;
 
       this.handSelection.selectAll('.card')
-        .transition()
-        // .attr('transform', function (theCard, index) {
-        .attr('x', function(theCard, index) {
-          var hammerTime = new Hammer($(this)[0]);
-          hammerTime.on('tap', function(evt) {
-            // hammerTime.on('swiperight', function (evt) {
-            console.log('swiperight', that.hand.cardById(evt.target.id));
-            console.log(evt);
+        .on('click', function (pass_card) {
+          d3.select(this).remove();
 
-            var pass_card = that.hand.cardById(evt.target.id)
+          that.socket.emit('pass', pass_card);
 
-            d3.select(evt.target).remove();
-
-            that.socket.emit('pass', pass_card);
-
-            _.remove(that.hand.cards, function(card) {
-              return card.id === pass_card.id;
-            });
-
-            console.log(that.hand);
-
-            //remove this gesture listener
-            hammerTime.destroy();
-            that.transition('post-kept-animation');
+          _.remove(that.hand.cards, function(card) {
+            return card.id === pass_card.id;
           });
 
+          console.log(that.hand);
+
+          //remove this gesture listener
+          that.transition('post-kept-animation');
+        })
+        .transition()
+        .attr('x', function(theCard, index) {
           var elem = d3.select(this);
           var oldX = elem.attr('x');
           console.log(oldX);
