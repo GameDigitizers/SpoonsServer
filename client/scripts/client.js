@@ -254,8 +254,9 @@ var client_fsm = new machina.Fsm({
             return 'images/spoon.png';
           })
           .on('click', function() {
-            this.socket.emit('take-spoon');
+            // this.socket.emit('take-spoon');
             this.spoonImage.remove();
+            this.transition('puzzle');
           }.bind(this));
       },
     },
@@ -356,6 +357,78 @@ var client_fsm = new machina.Fsm({
           this.next_card.style('display', 'none');
         }
       }
+    },
+
+    'puzzle': {
+      _onEnter: function () {
+        this.handSelection.remove();
+        this.pending_card_g.remove();
+        this.next_card.remove();
+
+        this.handle('draw-puzzle');
+      },
+
+      'draw-puzzle': function () {
+        var fsm = this;
+        console.log("Drawing the puzzle");
+
+        var candidates = _.shuffle([
+          [this.width/3, this.height/3],
+          [this.width/3, 2*this.height/3],
+          [2*this.width/3, this.height/3],
+          [2*this.width/3, 2*this.height/3]
+        ]);
+
+        var places = chance.pick(candidates, 2);
+
+        console.log(places[0], places[1]);
+
+        this.svg.selectAll('.node').remove();
+        this.svg.selectAll('.node-text').remove();
+
+        var next_circle = 0;
+        this.svg.selectAll('.node')
+            .data(places)
+            .enter()
+            .append('circle')
+            .classed('node', true)
+            .attr('cx', function (d) {
+              return d[0];
+            })
+            .attr('cy', function (d) {
+              return d[1];
+            })
+            .attr('r', 20)
+            .on('mouseover', function (d, i) {
+              if (i === next_circle) {
+                d3.select(this).classed('selected', true);
+                d3.select('#node-' + i).classed('selected', true);
+                next_circle++;
+              } else {
+                console.log("Incorrect, redraw");
+                fsm.handle('draw-puzzle');
+              }
+            });
+
+        this.svg.selectAll('.node-text')
+          .data(places)
+          .enter()
+          .append('text')
+          .classed('node-text', true)
+          .attr('id', function (d, i) {
+            return 'node-' + i;
+          })
+          .attr('x', function (d) {
+            return d[0];
+          })
+          .attr('y', function (d) {
+            return d[1];
+          })
+          .text(function (d, i) {
+            return i;
+          });
+
+      },
     },
 
     'game-end': {

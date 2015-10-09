@@ -1,0 +1,17 @@
+
+.node {
+    stroke: blue;
+    fill: rgba(125, 125, 125, 1);
+}
+
+.node.selected {
+    fill: blue;
+}
+
+.node-text {
+    text-anchor: middle;
+}
+
+.node-text.selected {
+    stroke: white;
+}
