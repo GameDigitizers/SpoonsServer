@@ -1,9 +1,10 @@
 'use strict';
 var WIDTH_TO_HEIGHT = 125 / 182;
 
-var client_fsm = new machina.Fsm({
-  initialize: function(options) {
-    this.avatar_size = 75;
+var clientFsm = new machina.Fsm({
+  // initialize: function(options) {
+  initialize: function() {
+    this.avatarSize = 75;
     this.avatars = [
       'bear.png',
       'beaver.png',
@@ -50,25 +51,25 @@ var client_fsm = new machina.Fsm({
         }
 
       };
-      this.card_count_change();
+      this.cardCountChange();
       this.handle('card-change');
     }.bind(this));
 
     this.socket.on('incoming-available', function(msg) {
-      console.log("Something tells me there", (msg.available ? "are" : "aren't"), "cards to draw");
+      console.log('Something tells me there', (msg.available ? 'are' : 'aren\'t'), 'cards to draw');
 
       this.handle('available-cards', msg.available);
     }.bind(this));
 
     this.socket.on('new-card', function(msg) {
-      console.log("I just picked up a", msg.card);
+      console.log('I just picked up a', msg.card);
       console.log(this.hand);
 
       this.handle('new-card', msg.card);
     }.bind(this));
 
     this.socket.on('choose-avatar', function(msg) {
-      console.log("choose-avatar");
+      console.log('choose-avatar');
 
       this.transition('pick-avatar');
     }.bind(this));
@@ -77,14 +78,14 @@ var client_fsm = new machina.Fsm({
       this.transition('play');
     }.bind(this));
 
-    this.resize_recalc();
+    this.resizeRecalc();
   },
 
   namespace: 'spoons-client',
 
   initialState: 'need-game',
 
-  resize_recalc: function() {
+  resizeRecalc: function() {
     this.width = $('svg').width();
     this.height = $('svg').height();
 
@@ -96,37 +97,37 @@ var client_fsm = new machina.Fsm({
     };
 
     if (this.width / this.height > WIDTH_TO_HEIGHT) {
-      this.pending_card_height = .7 * this.height;
-      this.pending_card_width = this.pending_card_height * WIDTH_TO_HEIGHT;
-      this.card_height = .2 * this.height;
-      this.card_width = this.card_height * WIDTH_TO_HEIGHT;
+      this.pendingCardHeight = 0.7 * this.height;
+      this.pendingCardWidth = this.pendingCardHeight * WIDTH_TO_HEIGHT;
+      this.cardHeight = 0.2 * this.height;
+      this.cardWidth = this.cardHeight * WIDTH_TO_HEIGHT;
     } else {
-      this.pending_card_width = .8 * this.width;
-      this.pending_card_height = this.pending_card_width / WIDTH_TO_HEIGHT;
-      this.card_width = .2 * this.width;
-      this.card_height = this.card_width / WIDTH_TO_HEIGHT;
+      this.pendingCardWidth = 0.8 * this.width;
+      this.pendingCardHeight = this.pendingCardWidth / WIDTH_TO_HEIGHT;
+      this.cardWidth = 0.2 * this.width;
+      this.cardHeight = this.cardWidth / WIDTH_TO_HEIGHT;
     }
   },
 
-  card_count_change: function() {
-    this.hand_spacing = (this.width - this.card_width * this.hand.cards.length) / (this.hand.cards.length + 1);
+  cardCountChange: function() {
+    this.handSpacing = (this.width - this.cardWidth * this.hand.cards.length) / (this.hand.cards.length + 1);
   },
 
-  drawHand: function(image_selection) {
-    return image_selection
+  drawHand: function(imageSelection) {
+    return imageSelection
       .attr('x', function(theCard, index) {
-        return index * this.card_width + this.hand_spacing * (index + 1);
+        return index * this.cardWidth + this.handSpacing * (index + 1);
       }.bind(this))
-      .attr('y', this.height - this.card_height)
-      .attr('width', this.card_width)
-      .attr('height', this.card_height);
+      .attr('y', this.height - this.cardHeight)
+      .attr('width', this.cardWidth)
+      .attr('height', this.cardHeight);
 
 
 
   },
 
-  build_draw_card: function() {
-    this.next_card = this.svg.append('g')
+  buildDrawCard: function() {
+    this.nextCard = this.svg.append('g')
       .attr('id', 'draw-button')
       .append('svg:image')
       .style('display', 'none')
@@ -141,36 +142,36 @@ var client_fsm = new machina.Fsm({
       }.bind(this));
 
     var resize = function() {
-      this.next_card
-        .attr('x', -(this.pending_card_width / 2))
-        .attr('y', 0.4 * this.height - this.pending_card_height / 2)
-        .attr('width', this.pending_card_width)
-        .attr('height', this.pending_card_height);
+      this.nextCard
+        .attr('x', -(this.pendingCardWidth / 2))
+        .attr('y', 0.4 * this.height - this.pendingCardHeight / 2)
+        .attr('width', this.pendingCardWidth)
+        .attr('height', this.pendingCardHeight);
     }.bind(this);
 
-    this.register_resizer(resize);
+    this.registerResizer(resize);
 
     resize();
   },
 
-  register_resizer: function(resizer) {
+  registerResizer: function(resizer) {
     this.resizers.push(resizer);
   },
 
   resize: function() {
-    this.resize_recalc();
+    this.resizeRecalc();
 
     _.forEach(this.resizers, function(resizer) {
       resizer();
     });
   },
 
-  draw_pending_card: function(pending_selection) {
-    pending_selection
-      .attr('x', this.width / 2 - this.pending_card_width / 2)
-      .attr('y', 0.4 * this.height - this.pending_card_height / 2)
-      .attr('width', this.pending_card_width)
-      .attr('height', this.pending_card_height);
+  drawPendingCard: function(pendingSelection) {
+    pendingSelection
+      .attr('x', this.width / 2 - this.pendingCardWidth / 2)
+      .attr('y', 0.4 * this.height - this.pendingCardHeight / 2)
+      .attr('width', this.pendingCardWidth)
+      .attr('height', this.pendingCardHeight);
   },
 
   states: {
@@ -200,8 +201,8 @@ var client_fsm = new machina.Fsm({
           .attr('y', function(player, index) {
             return 100 * (Math.floor((100 * index) / 500));
           })
-          .attr('width', this.avatar_size)
-          .attr('height', this.avatar_size)
+          .attr('width', this.avatarSize)
+          .attr('height', this.avatarSize)
           .attr('xlink:href', function(avatar) {
             return 'images/' + avatar;
           })
@@ -209,7 +210,7 @@ var client_fsm = new machina.Fsm({
             this.socket.emit('avatar-choice', {
               avatar: avatar
             });
-            console.log("transitioning to before-start");
+            console.log('transitioning to before-start');
             this.transition('before-start');
           }.bind(this));
       },
@@ -221,7 +222,7 @@ var client_fsm = new machina.Fsm({
 
     'before-start': {
       _onEnter: function() {
-        console.log("in before-start");
+        console.log('in before-start');
         this.socket.emit('player-ready', {
           ready: true
         });
@@ -243,14 +244,14 @@ var client_fsm = new machina.Fsm({
           .attr('class', 'hand');
 
         // Add draw card card
-        this.build_draw_card();
+        this.buildDrawCard();
 
         // Add the pending card
-        this.pending_card_g = this.svg.append('g')
+        this.pendingCardG = this.svg.append('g')
           .attr('class', 'pending-card');
 
         this.spoonImage = this.svg.append('svg:image')
-          .attr('xlink:href', function(theCard) {
+          .attr('xlink:href', function() {
             return 'images/spoon.png';
           })
           .on('click', function() {
@@ -273,28 +274,28 @@ var client_fsm = new machina.Fsm({
             .attr('height', this.spoonSettings.height);
         }.bind(this);
 
-        this.register_resizer(resize);
+        this.registerResizer(resize);
 
         resize();
 
         d3.select('body')
           .on('keydown', function () {
             if (d3.event.keyCode === 39) { //arrow right
-              this.next_card.on('click')();
+              this.nextCard.on('click')();
             } else if (d3.event.keyCode === 40) { //arrow down
               console.log('down');
-              this.keep_card = d3.selectAll('.the-pending-card').datum();
-              this.transition('keep-card', this.keep_card);
+              this.keepCard = d3.selectAll('.the-pending-card').datum();
+              this.transition('keep-card', this.keepCard);
             }
-          }.bind(this))
+          }.bind(this));
       },
 
       'card-change': function() {
-        console.log("Drawing hand");
+        console.log('Drawing hand');
         var dataSelection = this.handSelection.selectAll('.card')
           .data(this.hand.cards);
 
-        var image_selection = dataSelection
+        var imageSelection = dataSelection
           .enter()
           .append('svg:image')
           .attr('id', function(theCard) {
@@ -306,11 +307,11 @@ var client_fsm = new machina.Fsm({
           });
 
 
-        this.drawHand(image_selection);
+        this.drawHand(imageSelection);
       },
 
       'new-card': function(card) {
-        var pending_cards = this.pending_card_g
+        var pendingCards = this.pendingCardG
           .selectAll('.the-pending-card')
           .data([card])
           .enter()
@@ -332,29 +333,29 @@ var client_fsm = new machina.Fsm({
           direction: Hammer.DIRECTION_ALL
         });
 
-        mc.on('swipedown', function(evt) {
-          this.keep_card = card;
+        mc.on('swipedown', function() {
+          this.keepCard = card;
           this.transition('keep-card', card);
         }.bind(this));
 
-        this.draw_pending_card(pending_cards);
+        this.drawPendingCard(pendingCards);
       },
 
       // 'resize': function () {
-      //   console.log("fsm resize");
-      //   this.resize_recalc();
+      //   console.log('fsm resize');
+      //   this.resizeRecalc();
 
       //   // debugger;
       //   this.drawHand(d3.selectAll('.card'));
-      //   this.draw_pending_card(d3.selectAll('.the-pending-card'));
+      //   this.drawPendingCard(d3.selectAll('.the-pending-card'));
       // },
 
       'available-cards': function(available) {
-        console.log("in available-cards");
+        console.log('in available-cards');
         if (available) {
-          this.next_card.style('display', null);
+          this.nextCard.style('display', null);
         } else {
-          this.next_card.style('display', 'none');
+          this.nextCard.style('display', 'none');
         }
       }
     },
@@ -447,22 +448,23 @@ var client_fsm = new machina.Fsm({
       _onExit: function() {
         d3.select('.game-end').remove();
         this.handSelection.remove();
-        this.pending_card_g.remove();
-        this.next_card.remove();
+        this.pendingCardG.remove();
+        this.nextCard.remove();
       }
     },
 
     'keep-card': {
       _onEnter: function() {
-        console.log("keep card _onEnter", this.keep_card);
+        console.log('keep card _onEnter', this.keepCard);
 
-        this.hand.cards.push(this.keep_card);
+        this.hand.cards.push(this.keepCard);
         console.log(this.hand);
 
         var dataSelection = this.handSelection.selectAll('.card')
           .data(this.hand.cards);
 
-        var image_selection = dataSelection
+        // var imageSelection = dataSelection
+        dataSelection
           .enter()
           .append('svg:image')
           .attr('id', function(theCard) {
@@ -475,7 +477,7 @@ var client_fsm = new machina.Fsm({
 
         d3.select('.the-pending-card').remove();
 
-        this.card_count_change();
+        this.cardCountChange();
         this.drawHand(d3.selectAll('.card'));
 
         this.discardAnimate();
@@ -484,7 +486,7 @@ var client_fsm = new machina.Fsm({
 
     'post-kept-animation': {
       _onEnter: function() {
-        this.card_count_change();
+        this.cardCountChange();
 
         var n = 0;
 
@@ -495,7 +497,7 @@ var client_fsm = new machina.Fsm({
           .each(function() {
             ++n;
           })
-          .each("end", function() {
+          .each('end', function() {
             if (!--n) {
               this.transition('play');
             }
@@ -511,13 +513,13 @@ var client_fsm = new machina.Fsm({
       var that = this;
 
       this.handSelection.selectAll('.card')
-        .on('click', function (pass_card) {
+        .on('click', function (passCard) {
           d3.select(this).remove();
 
-          that.socket.emit('pass', pass_card);
+          that.socket.emit('pass', passCard);
 
           _.remove(that.hand.cards, function(card) {
-            return card.id === pass_card.id;
+            return card.id === passCard.id;
           });
 
           console.log(that.hand);
@@ -530,35 +532,35 @@ var client_fsm = new machina.Fsm({
           var elem = d3.select(this);
           var oldX = elem.attr('x');
           console.log(oldX);
-          var oldY = elem.attr('y')
+          var oldY = elem.attr('y');
           console.log(oldY);
           // give the cards 90% of the height, and split the other 10% for the spacing
-          var pass_card_height = that.height * .8 / that.hand.cards.length;
-          var pass_card_space_height = (that.height * .2) / (that.hand.cards.length + 1);
+          var passCardHeight = that.height * 0.8 / that.hand.cards.length;
+          // var passCardSpaceHeight = (that.height * 0.2) / (that.hand.cards.length + 1);
 
           // set the cards' width based on their height (and the card width:height ratio)
-          var pass_card_width = pass_card_height * WIDTH_TO_HEIGHT;
+          var passCardWidth = passCardHeight * WIDTH_TO_HEIGHT;
 
-          var pass_card_x = that.width / 2 - pass_card_width / 2; // - oldX;
-          var pass_card_y = index * pass_card_height + pass_card_space_height * (index + 1); // - oldY;
-          return pass_card_x;
+          var passCardX = that.width / 2 - passCardWidth / 2; // - oldX;
+          // var passCardY = index * passCardHeight + passCardSpaceHeight * (index + 1); // - oldY;
+          return passCardX;
         })
         .attr('y', function(theCard, index) {
-          var elem = d3.select(this);
-          var oldX = elem.attr('x');
-          console.log(oldX);
-          var oldY = elem.attr('y')
-          console.log(oldY);
+          // var elem = d3.select(this);
+          // var oldX = elem.attr('x');
+          // console.log(oldX);
+          // var oldY = elem.attr('y');
+          // console.log(oldY);
           // give the cards 90% of the height, and split the other 10% for the spacing
-          var pass_card_height = that.height * .8 / that.hand.cards.length;
-          var pass_card_space_height = (that.height * .2) / (that.hand.cards.length + 1);
+          var passCardHeight = that.height * 0.8 / that.hand.cards.length;
+          var passCardSpaceHeight = (that.height * 0.2) / (that.hand.cards.length + 1);
 
           // set the cards' width based on their height (and the card width:height ratio)
-          var pass_card_width = pass_card_height * WIDTH_TO_HEIGHT;
+          // var passCardWidth = passCardHeight * WIDTH_TO_HEIGHT;
 
-          var pass_card_x = that.width / 2 - pass_card_width / 2; // - oldX;
-          var pass_card_y = index * pass_card_height + pass_card_space_height * (index + 1); // - oldY;
-          return pass_card_y;
+          // var passCardX = that.width / 2 - passCardWidth / 2; // - oldX;
+          var passCardY = index * passCardHeight + passCardSpaceHeight * (index + 1); // - oldY;
+          return passCardY;
 
         })
         .ease('linear')
@@ -569,5 +571,5 @@ var client_fsm = new machina.Fsm({
 
 $(window).resize(function() {
   console.log('resizing');
-  client_fsm.resize();
+  clientFsm.resize();
 });
