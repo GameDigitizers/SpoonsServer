@@ -8,22 +8,70 @@ var PlayerFsm = require('./playerFsm').PlayerFsm;
 var cards = require('./cards').card_files;
 
 var INITIAL_AVATARS = [
-  'bear.png',
-  'beaver.png',
-  'bee.png',
-  'chicken.png',
-  'cow.png',
-  'dog.png',
-  'elephant.png',
-  'giraffe.png',
-  'goat.png',
-  'hippo.png',
-  'owl.png',
-  'penguin.png',
-  'pig.png',
-  'sheep.png',
-  'turkey.png',
-  'zebra.png'
+  {
+    img:'bear.png',
+    taken: false
+  },
+  {
+    img:'beaver.png',
+    taken: false
+  },
+  {
+    img:'bee.png',
+    taken: false
+  },
+  {
+    img:'chicken.png',
+    taken: false
+  },
+  {
+    img:'cow.png',
+    taken: false
+  },
+  {
+    img:'dog.png',
+    taken: false
+  },
+  {
+    img:'elephant.png',
+    taken: false
+  },
+  {
+    img:'giraffe.png',
+    taken: false
+  },
+  {
+    img:'goat.png',
+    taken: false
+  },
+  {
+    img:'hippo.png',
+    taken: false
+  },
+  {
+    img:'owl.png',
+    taken: false
+  },
+  {
+    img:'penguin.png',
+    taken: false
+  },
+  {
+    img:'pig.png',
+    taken: false
+  },
+  {
+    img:'sheep.png',
+    taken: false
+  },
+  {
+    img:'turkey.png',
+    taken: false
+  },
+  {
+    img:'zebra.png',
+    taken: false
+  },
 ];
 
 exports.GameFsm = machina.Fsm.extend({
@@ -52,6 +100,15 @@ exports.GameFsm = machina.Fsm.extend({
       },
 
       'avatar-choice': function (msg) {
+        _.findWhere(this.available_avatars, {img:msg.avatar.img}).taken=true;
+        console.log(this.available_avatars);
+
+        this.players.filter(function (player) {
+          return player.socket_id !== msg.player.socket_id;
+        }).forEach(function (player) {
+          console.log('this.available_avatars', this.available_avatars);
+          player.chooseAvatar(this.available_avatars);
+        }.bind(this));
         this.chromecast_message({
           type: 'new-player',
           message: {
@@ -94,7 +151,17 @@ exports.GameFsm = machina.Fsm.extend({
         }
       },
 
-      'take-spoon': function () {
+      puzzle: function (message) {
+        message.player.emit_message('puzzle-length', {
+          playerCount: this.players.length,
+        });
+      },
+
+      'puzzle-end': function (message) {
+        message.player.emit_message('got-spoon', {
+          gotSpoon: true,
+        });
+
         this.spoonsTaken++;
 
         // tell the clients? who knows?
@@ -161,5 +228,5 @@ exports.GameFsm = machina.Fsm.extend({
     player.socket.join(this.gameId);
 
     this.handle('new-player', player);
-  }
+  },
 });

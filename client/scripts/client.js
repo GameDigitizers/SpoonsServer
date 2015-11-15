@@ -6,22 +6,22 @@ var clientFsm = new machina.Fsm({
   initialize: function() {
     this.avatarSize = 75;
     this.avatars = [
-      'bear.png',
-      'beaver.png',
-      'bee.png',
-      'chicken.png',
-      'cow.png',
-      'dog.png',
-      'elephant.png',
-      'giraffe.png',
-      'goat.png',
-      'hippo.png',
-      'owl.png',
-      'penguin.png',
-      'pig.png',
-      'sheep.png',
-      'turkey.png',
-      'zebra.png'
+      // 'bear.png',
+      // 'beaver.png',
+      // 'bee.png',
+      // 'chicken.png',
+      // 'cow.png',
+      // 'dog.png',
+      // 'elephant.png',
+      // 'giraffe.png',
+      // 'goat.png',
+      // 'hippo.png',
+      // 'owl.png',
+      // 'penguin.png',
+      // 'pig.png',
+      // 'sheep.png',
+      // 'turkey.png',
+      // 'zebra.png'
     ];
 
     this.resizers = [];
@@ -69,13 +69,23 @@ var clientFsm = new machina.Fsm({
     }.bind(this));
 
     this.socket.on('choose-avatar', function(msg) {
-      console.log('choose-avatar');
+      console.log('choose-avatar', msg);
+      this.avatars = msg.avatars;
 
       this.transition('pick-avatar');
+      this.handle('avatar-selection');
     }.bind(this));
 
     this.socket.on('play', function() {
       this.transition('play');
+    }.bind(this));
+
+    this.socket.on('puzzle-length', function(msg) {
+      this.handle('puzzle-length', msg);
+    }.bind(this));
+
+    this.socket.on('got-spoon', function(msg) {
+      this.handle('got-spoon', msg);
     }.bind(this));
 
     this.resizeRecalc();
@@ -92,8 +102,8 @@ var clientFsm = new machina.Fsm({
     this.spoonSettings = {
       width: 20,
       height: 100,
-      x: this.width - 300,
-      y: 50
+      x: this.width - (20+20),
+      y: 0
     };
 
     if (this.width / this.height > WIDTH_TO_HEIGHT) {
@@ -188,8 +198,13 @@ var clientFsm = new machina.Fsm({
 
     'pick-avatar': {
       _onEnter: function() {
-        this.svg.selectAll().remove();
+        // this.handle('avatar-selection');
+      },
 
+      'avatar-selection': function () {
+        console.log('avatar-selection', this.svg, this.avatars);
+        this.svg.selectAll('.avatar').remove();
+        
         this.svg.selectAll('.avatar')
           .data(this.avatars)
           .enter()
@@ -204,7 +219,18 @@ var clientFsm = new machina.Fsm({
           .attr('width', this.avatarSize)
           .attr('height', this.avatarSize)
           .attr('xlink:href', function(avatar) {
-            return 'images/' + avatar;
+            return 'images/' + avatar.img;
+          })
+          .style('opacity', function (d) {
+            // debugger
+            console.log(d);
+            if (d.taken) {
+              console.log('gonna do .2');
+              return 0.2;
+            }
+            else {
+              return 1;
+            }
           })
           .on('click', function(avatar) {
             this.socket.emit('avatar-choice', {
@@ -214,6 +240,7 @@ var clientFsm = new machina.Fsm({
             this.transition('before-start');
           }.bind(this));
       },
+
       _onExit: function() {
         this.svg.selectAll('.avatar').remove();
       },
@@ -255,10 +282,13 @@ var clientFsm = new machina.Fsm({
             return 'images/spoon.png';
           })
           .on('click', function() {
-            // this.socket.emit('take-spoon');
             this.spoonImage.remove();
             this.transition('puzzle');
           }.bind(this));
+
+        this.messageBox = this.svg.append('text')
+          .attr('x', this.width/2)
+          .attr('y', 25);
       },
     },
 
@@ -333,7 +363,9 @@ var clientFsm = new machina.Fsm({
           direction: Hammer.DIRECTION_ALL
         });
 
-        mc.on('swipedown', function() {
+        mc.on('swipedown', function(e) {
+          console.log('swipedown', e);
+          e.preventDefault();
           this.keepCard = card;
           this.transition('keep-card', card);
         }.bind(this));
@@ -362,59 +394,88 @@ var clientFsm = new machina.Fsm({
 
     'puzzle': {
       _onEnter: function () {
-        this.handSelection.remove();
-        this.pending_card_g.remove();
-        this.next_card.remove();
+        this.socket.emit('puzzle');
 
-        this.handle('draw-puzzle');
+        this.handSelection.remove();
+        if (this.pendingCardG) {
+          this.pendingCardG.remove();
+        }
+        if (this.nextCard) {
+          this.nextCard.remove();
+        }
       },
 
-      'draw-puzzle': function () {
+      'puzzle-length': function (message) {
+        this.playerCount = message.playerCount;
+        this.puzzlesCompleted = 0;
+        
+        this.handle('configure-puzzle');
+      },
+
+      'configure-puzzle': function () {
+        console.log("Configuring the puzzle");
+
         var fsm = this;
-        console.log("Drawing the puzzle");
+        function getCandidates (w, h) {
+          var candidatesList = [];
+          for (var i = 1; i <= w; i++) {
+            for (var j = 1; j <= h; j++) {
+              candidatesList.push([i*fsm.width/w-fsm.width/w/2, j*fsm.height/h-fsm.height/h/2]);
+            }
+          }
+          candidatesList = _.shuffle(candidatesList);
+          return candidatesList;
+        }
 
-        var candidates = _.shuffle([
-          [this.width/3, this.height/3],
-          [this.width/3, 2*this.height/3],
-          [2*this.width/3, this.height/3],
-          [2*this.width/3, 2*this.height/3]
-        ]);
+        var candidates = getCandidates(3,3);
 
-        var places = chance.pick(candidates, 2);
+        var places = chance.pick(candidates, 2+this.puzzlesCompleted);
 
-        console.log(places[0], places[1]);
+        // console.log(places[0], places[1]);
+        console.log(places);
+
+        this.handle('draw-puzzle', places);
+
+      },
+
+      'draw-puzzle': function (places) {
+        var fsm = this;
+        console.log("Drawing the puzzle", places);
 
         this.svg.selectAll('.node').remove();
-        this.svg.selectAll('.node-text').remove();
 
         var next_circle = 0;
-        this.svg.selectAll('.node')
+        var nodeGroup = this.svg.selectAll('g.node')
             .data(places)
             .enter()
-            .append('circle')
+            .append('g')
             .classed('node', true)
+            .on('mouseover', function (d, i) {
+              if (i === next_circle) {
+                d3.select(this).classed('selected', true);
+                next_circle++;
+              } else if (i > next_circle) {
+                console.log("Incorrect, redraw");
+                fsm.handle('configure-puzzle');
+              }
+
+              console.log('next_circle, places.length', next_circle, places.length);
+              if (next_circle >= places.length) {
+                console.log('Next puzzle');
+                fsm.handle('finished-puzzle', places.length);
+              }
+            });
+
+        nodeGroup.append('circle')
             .attr('cx', function (d) {
               return d[0];
             })
             .attr('cy', function (d) {
               return d[1];
             })
-            .attr('r', 20)
-            .on('mouseover', function (d, i) {
-              if (i === next_circle) {
-                d3.select(this).classed('selected', true);
-                d3.select('#node-' + i).classed('selected', true);
-                next_circle++;
-              } else {
-                console.log("Incorrect, redraw");
-                fsm.handle('draw-puzzle');
-              }
-            });
+            .attr('r', 20);
 
-        this.svg.selectAll('.node-text')
-          .data(places)
-          .enter()
-          .append('text')
+        nodeGroup.append('text')
           .classed('node-text', true)
           .attr('id', function (d, i) {
             return 'node-' + i;
@@ -428,8 +489,36 @@ var clientFsm = new machina.Fsm({
           .text(function (d, i) {
             return i;
           });
-
       },
+
+      'finished-puzzle': function (numDots) { //finished the current puzzle
+        console.log('finished-puzzle', numDots, this.playerCount);
+        this.puzzlesCompleted++;
+        if (this.playerCount === numDots) {
+          this.transition('puzzle-end');
+        } else {
+          this.handle('configure-puzzle');
+        }
+      },
+
+      _onExit: function () {
+        this.svg.selectAll('.node').remove();
+      }
+    },
+
+    'puzzle-end': { //done with all puzzles
+      _onEnter: function() {
+        this.socket.emit('puzzle-end');
+      },
+
+      'got-spoon': function (msg) {
+        if (msg.gotSpoon) {
+          this.transition('waiting-for-game-end');
+        } else {
+          this.messageBox.text('YOU LOSE! You are the only loser this time');
+          this.transition('game-end');
+        }
+      }
     },
 
     'game-end': {
@@ -450,6 +539,16 @@ var clientFsm = new machina.Fsm({
         this.handSelection.remove();
         this.pendingCardG.remove();
         this.nextCard.remove();
+      }
+    },
+
+    'waiting-for-game-end': {
+      _onEnter: function() {
+        this.messageBox.text("YOU DIDN'T LOSE!");
+      },
+
+      _onExit: function () {
+        this.messageBox.text('');
       }
     },
 

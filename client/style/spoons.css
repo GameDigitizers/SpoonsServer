@@ -4,7 +4,7 @@
     fill: rgba(125, 125, 125, 1);
 }
 
-.node.selected {
+g.selected.node {
     fill: blue;
 }
 
@@ -12,6 +12,10 @@
     text-anchor: middle;
 }
 
-.node-text.selected {
+g.selected .node-text {
     stroke: white;
+}
+
+body {
+  overflow-y: hidden;
 }
