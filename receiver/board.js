@@ -13,6 +13,7 @@ var castMachine = new machina.Fsm({
     });
 
     this.registerMessage('new-player');
+    this.registerMessage('transition-to-table');
   },
 
   registerMessage: function (msgType) {
@@ -42,6 +43,10 @@ var castMachine = new machina.Fsm({
 
       },
 
+      'transition-to-table': function () {
+        this.transition('table');
+      },
+
       'reflow-players': function () {
         console.log('reflow-players');
         this.reflow();
@@ -50,12 +55,12 @@ var castMachine = new machina.Fsm({
           .data(this.players)
           .enter()
             .append('g')
-            .attr('class', 'person')
-            .append('svg:image')
-            .attr('class', 'avatar')
             .attr('id', function(player, index) {
               return 'player_' + index;
             })
+            .attr('class', 'person')
+            .append('svg:image')
+            .attr('class', 'avatar')
             .attr('xlink:href', function (player) {
               return 'images/' + player.avatar;
             })
@@ -86,16 +91,35 @@ var castMachine = new machina.Fsm({
         this.svg.selectAll('.avatar')
           .transition()
           .attr('x', (player, index) => {
-            // x_radius * cos(Theta)
-            return (this.x_radius * Math.cos(index / this.players.length * 2 * Math.PI)) + (this.width/2) - (this.avatar_size/2) ;
+            player.x = (this.x_radius * Math.cos(index / this.players.length * 2 * Math.PI)) + (this.width/2) - (this.avatar_size/2) ;
+            return player.x;
           })
           .attr('y', (player, index) => {
-            // y_radius * sin(Theta)
-            return (this.y_radius * Math.sin(index / this.players.length * 2 * Math.PI)) + (this.height/2) - (this.avatar_size/2);
+            player.y = (this.y_radius * Math.sin(index / this.players.length * 2 * Math.PI)) + (this.height/2) - (this.avatar_size/2);
+            return player.y;
           })
           .attr('width', this.avatar_size)
           .attr('height', this.avatar_size);
 
+      }
+    },
+
+    'table': {
+      _onEnter: function () {
+        d3.select('#player_0')
+          .append('svg:image')
+          .classed('card-stack', true)
+          .attr('x', (player) => {
+            return player.x + this.avatar_size / 2;
+          })
+          .attr('y', (player) => {
+            return player.y + this.avatar_size;
+          })
+          .attr('width', this.card_width)
+          .attr('height', this.card_height)
+          .attr('xlink:href', function (player) {
+            return 'images/blueGrid.png';
+          });
       }
     },
   },
@@ -121,6 +145,8 @@ var castMachine = new machina.Fsm({
     this.y_radius = (this.playable_area_height - this.avatar_size) / 2;
     this.x_radius = (this.playable_area_width - this.avatar_size) / 2;
 
+    this.card_width = 30;
+    this.card_height = 50;
   },
 
   startMeUp: function () {
