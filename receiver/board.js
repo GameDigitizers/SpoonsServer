@@ -9,7 +9,7 @@ var castMachine = new machina.Fsm({
     this.svg = d3.select('svg');
 
     this.socket.emit('i_am_chromecast', {
-      gameId: window.location.hash,
+      gameId: '#42', //window.location.hash,
     });
 
     this.registerMessage('new-player');
@@ -81,10 +81,10 @@ var castMachine = new machina.Fsm({
                 .attr('width', 0)
                 .attr('height', 0)
                 .transition()
-                .attr('x', (player) => {
+                .attr('x', function (player) {
                   return (castMachine.x_radius * Math.cos(player.number / castMachine.players.length * 2 * Math.PI)) + (castMachine.width/2) - (castMachine.avatar_size/2) ;
                 })
-                .attr('y', (player) => {
+                .attr('y', function (player) {
                   return (castMachine.y_radius * Math.sin(player.number / castMachine.players.length * 2 * Math.PI)) + (castMachine.height/2) - (castMachine.avatar_size/2);
                 })
                 .attr('width', castMachine.avatar_size)
@@ -93,12 +93,12 @@ var castMachine = new machina.Fsm({
 
         this.svg.selectAll('.avatar')
           .transition()
-          .attr('x', (player, index) => {
-            player.x = (this.x_radius * Math.cos(index / this.players.length * 2 * Math.PI)) + (this.width/2) - (this.avatar_size/2) ;
+          .attr('x', function (player, index) {
+            player.x = (castMachine.x_radius * Math.cos(index / castMachine.players.length * 2 * Math.PI)) + (castMachine.width/2) - (castMachine.avatar_size/2) ;
             return player.x;
           })
-          .attr('y', (player, index) => {
-            player.y = (this.y_radius * Math.sin(index / this.players.length * 2 * Math.PI)) + (this.height/2) - (this.avatar_size/2);
+          .attr('y', function (player, index) {
+            player.y = (castMachine.y_radius * Math.sin(index / castMachine.players.length * 2 * Math.PI)) + (castMachine.height/2) - (castMachine.avatar_size/2);
             return player.y;
           })
           .attr('width', this.avatar_size)
@@ -112,11 +112,11 @@ var castMachine = new machina.Fsm({
         d3.select('#player_0')
           .append('svg:image')
           .classed('card-stack', true)
-          .attr('x', (player) => {
-            return player.x + this.avatar_size / 2;
+          .attr('x', function (player) {
+            return player.x + castMachine.avatar_size / 2;
           })
-          .attr('y', (player) => {
-            return player.y + this.avatar_size;
+          .attr('y', function (player) {
+            return player.y + castMachine.avatar_size;
           })
           .attr('width', this.card_width)
           .attr('height', this.card_height)
@@ -257,4 +257,12 @@ var castMachine = new machina.Fsm({
   },
 });
 
-castMachine.startMeUp();
+// castMachine.startMeUp();
+
+function board(context) {
+  this.context = context;
+
+  this.setup = function () {
+    castMachine.startMeUp();
+  }
+}
