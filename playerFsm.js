@@ -14,6 +14,7 @@ exports.PlayerFsm = machina.Fsm.extend({
     this.game      = options.game;
     this.hand      = [];
     this.incoming  = [];
+    this.playerId  = options.playerId;
 
     this.game.on('transition', function (data) {
       console.log("The game transitioned", data);

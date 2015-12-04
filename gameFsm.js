@@ -132,7 +132,7 @@ exports.GameFsm = machina.Fsm.extend({
 
     play: {
       _onEnter: function () {
-        this.chromecast_message('transition-to-table');
+        this.chromecast_message('play');
         console.log("Need to do some dealing");
 
         this.io.to(this.gameId).emit('play');
@@ -151,6 +151,15 @@ exports.GameFsm = machina.Fsm.extend({
         }
       },
 
+      pass: function (message) {
+        this.chromecast_message({
+          type: 'pass',
+          message: {
+            player: message.player.playerId,
+          }
+        });
+      },
+
       puzzle: function (message) {
         message.player.emit_message('puzzle-length', {
           playerCount: this.players.length,
@@ -160,6 +169,13 @@ exports.GameFsm = machina.Fsm.extend({
       'puzzle-end': function (message) {
         message.player.emit_message('got-spoon', {
           gotSpoon: true,
+        });
+
+        this.chromecast_message({
+          type: 'take-spoon',
+          message: {
+            player: message.player.playerId,
+          }
         });
 
         this.spoonsTaken++;
@@ -172,6 +188,9 @@ exports.GameFsm = machina.Fsm.extend({
         if (this.spoonsTaken == this.players.length - 1) {
           // we're done ... do something
           this.io.to(this.gameId).emit('game-end');
+          this.chromecast_message({
+            type: 'game-end',
+          });
           this.transition('lobby');
         }
       },
@@ -179,7 +198,6 @@ exports.GameFsm = machina.Fsm.extend({
       _onExit: function () {
         this.spoonsTaken = 0;
         this.players.forEach(function (player) {
-          console.log(player);
           player.ready = false;
           player.next_player = null;
         });
@@ -203,6 +221,9 @@ exports.GameFsm = machina.Fsm.extend({
 
   newCast: function (chromecast) {
     console.log("Just met a new chromecast", chromecast.id);
+
+    // chromecast.join(this.gameId);
+
     this.chromecasts.push(chromecast);
 
     // this.handle('send-view')
@@ -220,8 +241,9 @@ exports.GameFsm = machina.Fsm.extend({
 
   newPlayer: function (socket) {
     var player = new PlayerFsm({
-      socket: socket,
-      game:   this
+      socket:   socket,
+      game:     this,
+      playerId: this.players.length,
     });
     this.players.push(player);
 
