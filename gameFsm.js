@@ -112,7 +112,7 @@ exports.GameFsm = machina.Fsm.extend({
         this.chromecast_message({
           type: 'new-player',
           message: {
-            avatar: msg.avatar
+            avatar: msg.avatar.img,
           }
         });
       },

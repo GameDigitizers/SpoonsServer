@@ -1,20 +1,24 @@
 
+var min_avatar_height = 125;
+var max_avatar_height = 250;
+
 var castMachine = new machina.Fsm({
   initialize: function () {
     this.socket = io();
-
-    this.socket.on('chat message', function(msg){
-      console.log("CHAT MESSAGE");
-      console.log(msg);
-    });
+    this.players = [];
+    this.svg = d3.select('svg');
 
     this.socket.emit('i_am_chromecast', {
       gameId: window.location.hash,
     });
 
-    this.socket.on('new-player', function (msg) {
-      castMachine.handle('new-player', msg);
-    })
+    this.registerMessage('new-player');
+  },
+
+  registerMessage: function (msgType) {
+    this.socket.on(msgType, function (msg) {
+      castMachine.handle(msgType, msg);
+    });
   },
 
   namespace: 'chromecast',
@@ -23,13 +27,100 @@ var castMachine = new machina.Fsm({
   states: {
     'lobby': {
       _onEnter: function () {
-                
       },
 
       'new-player': function (msg) {
-        console.log("need to draw a ", msg.avatar);
+        console.log("need to draw a ", msg);
+
+        var player = {
+          avatar: msg.avatar,
+          number: this.players.length,
+        };
+
+        this.players.push(player);
+        this.handle('reflow-players');
+
+      },
+
+      'reflow-players': function () {
+        console.log('reflow-players');
+        this.reflow();
+
+        var personSelection = this.svg.selectAll('.avatar')
+          .data(this.players)
+          .enter()
+            .append('g')
+            .attr('class', 'person')
+            .append('svg:image')
+            .attr('class', 'avatar')
+            .attr('id', function(player, index) {
+              return 'player_' + index;
+            })
+            .attr('xlink:href', function (player) {
+              return 'images/' + player.avatar;
+            })
+            .attr('width', 1)
+            .attr('height', 1)
+            .on('load', function () {
+              console.log("image is here");
+              d3.select(this)
+                .attr('x', function (player, index) {
+                  return castMachine.playable_area_width / 2;
+                })
+                .attr('y', function (player, index) {
+                  return castMachine.playable_area_height / 2;
+                })
+                .attr('width', 0)
+                .attr('height', 0)
+                .transition()
+                .attr('x', (player) => {
+                  return (castMachine.x_radius * Math.cos(player.number / castMachine.players.length * 2 * Math.PI)) + (castMachine.width/2) - (castMachine.avatar_size/2) ;
+                })
+                .attr('y', (player) => {
+                  return (castMachine.y_radius * Math.sin(player.number / castMachine.players.length * 2 * Math.PI)) + (castMachine.height/2) - (castMachine.avatar_size/2);
+                })
+                .attr('width', castMachine.avatar_size)
+                .attr('height', castMachine.avatar_size);
+            });
+
+        this.svg.selectAll('.avatar')
+          .transition()
+          .attr('x', (player, index) => {
+            // x_radius * cos(Theta)
+            return (this.x_radius * Math.cos(index / this.players.length * 2 * Math.PI)) + (this.width/2) - (this.avatar_size/2) ;
+          })
+          .attr('y', (player, index) => {
+            // y_radius * sin(Theta)
+            return (this.y_radius * Math.sin(index / this.players.length * 2 * Math.PI)) + (this.height/2) - (this.avatar_size/2);
+          })
+          .attr('width', this.avatar_size)
+          .attr('height', this.avatar_size);
+
       }
     },
+  },
+
+  reflow: function () {
+    this.width = $('svg').width();
+    this.height = $('svg').height();
+
+    // Margins set at 5%
+    this.x_margin = this.width * .05;
+    this.y_margin = this.height * .05;
+
+    // Double the margin, and subtract from the width and height
+    this.playable_area_width = this.width - (2 * this.x_margin);
+    this.playable_area_height = this.height - (2 * this.y_margin);
+
+    // check for the maximum size
+    this.avatar_size = d3.max([this.min_avatar_height, (this.playable_area_height/this.players.length)]);
+    // check for the minimum size
+    this.avatar_size = d3.min([this.avatar_size, this.max_avatar_height]);
+
+    // This are the radii of the ellipse
+    this.y_radius = (this.playable_area_height - this.avatar_size) / 2;
+    this.x_radius = (this.playable_area_width - this.avatar_size) / 2;
+
   },
 
   startMeUp: function () {
