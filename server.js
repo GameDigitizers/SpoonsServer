@@ -90,8 +90,8 @@ io.use(router);
 
 io.on('connection', function  (socket) {
   socket.on('join-game', function (args) {
-    console.log("is my socket good now?");
-    console.log(args);
+    // console.log("is my socket good now?");
+    // console.log(args);
     GameManager.startGame({
       msg: args,
       socket: socket,
