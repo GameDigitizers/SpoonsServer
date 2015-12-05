@@ -152,6 +152,13 @@ exports.GameFsm = machina.Fsm.extend({
       },
 
       pass: function (message) {
+        console.log(Object.keys(message));
+        console.log(chalk.green.bold('P' + message.player.playerId) + 
+          ' passes ' + 
+          chalk.blue.bold(message.value + toSymbol(message.suit)) + ' ' + 
+          ' to ' +
+          chalk.green.bold('P' + message.player.next_player.playerId));
+
         this.chromecast_message({
           type: 'pass',
           message: {
@@ -252,3 +259,21 @@ exports.GameFsm = machina.Fsm.extend({
     this.handle('new-player', player);
   },
 });
+
+
+function toSymbol(suit) {
+  if (suit === 'hearts') {
+    return '♥';
+  }
+  if (suit === 'spades') {
+    return '♠';
+  }
+  if (suit === 'diamonds') {
+    return '♦';
+  }
+  if (suit === 'clubs') {
+    return '♣';
+  }
+  console.log('No suit for: ' + suit);
+  return '';
+}
