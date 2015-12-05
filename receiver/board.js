@@ -266,3 +266,36 @@ function board(context) {
     castMachine.startMeUp();
   }
 }
+
+// function jump(){
+//   var jumpHeight = 30;
+//   var originalY = d3.select('#player_0').attr('y');
+
+//   d3.select('#player_0')
+//     .transition()
+//       .attr('y', originalY - jumpHeight  )    
+//       .ease('linear')
+//       .duration(1000)
+//       .each('end',function() {          
+//         d3.select(this)
+//           .transition()                  
+//           .attr('y', originalY )    
+//           .duration(1000);         
+//        });
+// function passLeft(){
+//   d3.selectAll('.person g image')
+//     .each(function(d, i, array){
+//       console.log(this);
+//       d3.select(this)
+//         .transition()
+//         .attr('x', function(){
+//           return players[ d3.min([ (i+1), players.length-1 ]) ].card_pile_location.x;     
+//         })
+//         .attr('y', function(){
+//           return players[ d3.min([ (i+1), players.length-1 ]) ].card_pile_location.y;    
+//         })
+//         .ease('linear')
+//         .duration(1000);
+//     })
+// };
+// window.pl = passLeft();
