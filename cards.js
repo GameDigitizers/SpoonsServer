@@ -236,79 +236,79 @@ exports.card_files = [
     {
         id: "as",
         src: "ace_of_spades2.png",
-        suit: "spades2",
+        suit: "spades",
         value: "ace"
     },
     {
         id: "jc",
         src: "jack_of_clubs2.png",
-        suit: "clubs2",
+        suit: "clubs",
         value: "jack"
     },
     {
         id: "jd",
         src: "jack_of_diamonds2.png",
-        suit: "diamonds2",
+        suit: "diamonds",
         value: "jack"
     },
     {
         id: "jh",
         src: "jack_of_hearts2.png",
-        suit: "hearts2",
+        suit: "hearts",
         value: "jack"
     },
     {
         id: "js",
         src: "jack_of_spades2.png",
-        suit: "spades2",
+        suit: "spades",
         value: "jack"
     },
     {
         id: "kc",
         src: "king_of_clubs2.png",
-        suit: "clubs2",
+        suit: "clubs",
         value: "king"
     },
     {
         id: "kd",
         src: "king_of_diamonds2.png",
-        suit: "diamonds2",
+        suit: "diamonds",
         value: "king"
     },
     {
         id: "kh",
         src: "king_of_hearts2.png",
-        suit: "hearts2",
+        suit: "hearts",
         value: "king"
     },
     {
         id: "ks",
         src: "king_of_spades2.png",
-        suit: "spades2",
+        suit: "spades",
         value: "king"
     },
     {
         id: "qc",
         src: "queen_of_clubs2.png",
-        suit: "clubs2",
+        suit: "clubs",
         value: "queen"
     },
     {
         id: "qd",
         src: "queen_of_diamonds2.png",
-        suit: "diamonds2",
+        suit: "diamonds",
         value: "queen"
     },
     {
         id: "qh",
         src: "queen_of_hearts2.png",
-        suit: "hearts2",
+        suit: "hearts",
         value: "queen"
     },
     {
         id: "qs",
         src: "queen_of_spades2.png",
-        suit: "spades2",
+        suit: "spades",
         value: "queen"
     }
 ];
