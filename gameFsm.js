@@ -101,12 +101,10 @@ exports.GameFsm = machina.Fsm.extend({
 
       'avatar-choice': function (msg) {
         _.findWhere(this.available_avatars, {img:msg.avatar.img}).taken=true;
-        console.log(this.available_avatars);
 
         this.players.filter(function (player) {
           return player.socket_id !== msg.player.socket_id;
         }).forEach(function (player) {
-          console.log('this.available_avatars', this.available_avatars);
           player.chooseAvatar(this.available_avatars);
         }.bind(this));
         this.chromecast_message({
@@ -132,9 +130,6 @@ exports.GameFsm = machina.Fsm.extend({
 
     play: {
       _onEnter: function () {
-        this.chromecast_message('play');
-        console.log("Need to do some dealing");
-
         this.io.to(this.gameId).emit('play');
 
         var deck = chance.shuffle(cards);
@@ -152,7 +147,6 @@ exports.GameFsm = machina.Fsm.extend({
       },
 
       pass: function (message) {
-        console.log(Object.keys(message));
         console.log(chalk.green.bold('P' + message.player.playerId) + 
           ' passes ' + 
           chalk.blue.bold(message.value + toSymbol(message.suit)) + ' ' + 
@@ -195,9 +189,6 @@ exports.GameFsm = machina.Fsm.extend({
         if (this.spoonsTaken == this.players.length - 1) {
           // we're done ... do something
           this.io.to(this.gameId).emit('game-end');
-          this.chromecast_message({
-            type: 'game-end',
-          });
           this.transition('lobby');
         }
       },
@@ -229,8 +220,7 @@ exports.GameFsm = machina.Fsm.extend({
   newCast: function (chromecast) {
     console.log("Just met a new chromecast", chromecast.id);
 
-    // chromecast.join(this.gameId);
-
+    chromecast.join(this.gameId);
     this.chromecasts.push(chromecast);
 
     // this.handle('send-view')
@@ -255,6 +245,9 @@ exports.GameFsm = machina.Fsm.extend({
     this.players.push(player);
 
     player.socket.join(this.gameId);
+    player.socket.on('disconnect', function () {
+      console.log('We have lost a player folks!');
+    });
 
     this.handle('new-player', player);
   },

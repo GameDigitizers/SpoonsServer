@@ -46,8 +46,10 @@ var GameManager = (function () {
     socketToGame[args.socket.id] = activeGames[args.msg.gameId];
     
     if (args.type === 'cast') {
+      console.log(chalk.green('New chromecast'));
       game.newCast(args.socket);
     } else {
+      console.log(chalk.green('New person'));
       game.newPlayer(args.socket);
     }
   }
@@ -58,24 +60,12 @@ var GameManager = (function () {
   };
 })();
 
-
-router.on('i_am_chromecast', function (socket, args, next) {
-  console.log(chalk.green('New chromecast'));
-
-  GameManager.startGame({
-    msg: args[1],
-    socket: socket,
-    type: 'cast',
-  });
-  // By not calling next(), the event is consumed.
-});
-
 router.on('*', function (socket, args, next) {
   console.log(chalk.green.bold("Routered"), args);
 
   // Don't pass join-game calls on to gameFsm, the io.connection stuff should
   // handle it since socket-io.events (the route stuff) passes incomplete sockets
-  if (args[0] !== 'join-game') {
+  if (args[0] !== 'join-game' && args[0] !== 'i_am_chromecast') {
     GameManager.handleMessage({
       socketId: socket.id,
       type: args[0],
@@ -90,12 +80,18 @@ io.use(router);
 
 io.on('connection', function  (socket) {
   socket.on('join-game', function (args) {
-    // console.log("is my socket good now?");
-    // console.log(args);
     GameManager.startGame({
       msg: args,
       socket: socket,
       type: 'player',
+    });
+  });
+
+  socket.on('i_am_chromecast', function (args) {
+    GameManager.startGame({
+      msg: args,
+      socket: socket,
+      type: 'cast',
     });
   });
 });
