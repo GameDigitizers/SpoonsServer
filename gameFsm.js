@@ -1,7 +1,7 @@
 var _ =   require('lodash');
 
 var machina = require('machina');
-var chance = new require('chance')();
+var Chance = new require('chance');
 var chalk = require('chalk');
 
 var PlayerFsm = require('./playerFsm').PlayerFsm;
@@ -88,6 +88,7 @@ exports.GameFsm = machina.Fsm.extend({
     this.gameId = gameId;
 
     this.spoonsTaken = 0;
+    this.chance = Chance(new Date().getTime());
   },
 
   namespace: 'spoons',
@@ -132,7 +133,7 @@ exports.GameFsm = machina.Fsm.extend({
       _onEnter: function () {
         this.io.to(this.gameId).emit('play');
 
-        var deck = chance.shuffle(cards);
+        var deck = this.chance.shuffle(cards);
         _.forEach(this.players, function (player) {
           player.set_hand(deck.splice(0, 4));
         });

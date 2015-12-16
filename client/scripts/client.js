@@ -189,7 +189,7 @@ var clientFsm = new machina.Fsm({
       _onEnter: function() {
         // Eventually need a view for this
         this.socket.emit('join-game', {
-          gameId: window.location.hash
+          gameId: '#42', //window.location.hash
         });
 
         // this.transition('pick-avatar');
