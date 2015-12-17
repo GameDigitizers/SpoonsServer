@@ -31,6 +31,7 @@ var clientFsm = new machina.Fsm({
     this.socket = io();
 
     this.socket.on('game-end', function(message) {
+      this.handle('game-end', message);
       this.transition('game-end');
     }.bind(this));
 
@@ -279,7 +280,7 @@ var clientFsm = new machina.Fsm({
           ready: true
         });
 
-
+        this.playerCount = -1;
         // this.transition('play');
 
         this.svg.append('text')
@@ -404,6 +405,11 @@ var clientFsm = new machina.Fsm({
         }.bind(this));
 
         this.drawPendingCard(pendingCards);
+      },
+
+      'puzzle-length': function (message) {
+        console.log('now we know the player count');
+        this.playerCount = message.playerCount;
       },
 
       // 'resize': function () {
@@ -559,6 +565,15 @@ var clientFsm = new machina.Fsm({
         if (this.spoonImage && !this.spoonImage.empty()) {
           this.spoonImage.remove();
         }
+
+        if (this.svg.select('.game-end').empty()) {
+          this.svg.append('text')
+            .classed('game-end', true)
+            .attr('x', this.width / 2)
+            .attr('y', this.height / 4)
+            .text('YOU LOST! Oh nooooo....');
+        }
+
         this.svg.append('text')
           .classed('game-end', true)
           .attr('x', this.width / 2)
@@ -570,7 +585,7 @@ var clientFsm = new machina.Fsm({
           }.bind(this));
       },
       _onExit: function() {
-        d3.select('.game-end').remove();
+        d3.selectAll('.game-end').remove();
         this.handSelection.remove();
         this.pendingCardG.remove();
         this.nextCard.remove();
@@ -580,6 +595,22 @@ var clientFsm = new machina.Fsm({
     'waiting-for-game-end': {
       _onEnter: function() {
         this.messageBox.text("YOU DIDN'T LOSE!");
+      },
+
+      'game-end': function (msg) {
+        this.svg.append('text')
+          .classed('game-end', true)
+          .attr('x', 15)
+          .attr('y', this.height / 4)
+          .text('This player lost!')
+
+        this.svg.append('image')
+          .classed('game-end', true)
+          .attr('x', 15)
+          .attr('y', this.height / 4 + 15)
+          .attr('width', this.avatarSize)
+          .attr('height', this.avatarSize)
+          .attr('xlink:href', 'images/' + msg.loser);
       },
 
       _onExit: function () {
@@ -727,7 +758,7 @@ var clientFsm = new machina.Fsm({
     //   return card.value === firstValue;
     // });
 
-    return winning;
+    return winning || this.playerCount !== -1;
   }
 });
 

@@ -88,7 +88,6 @@ exports.GameFsm = machina.Fsm.extend({
 
     this.gameId = gameId;
 
-    this.spoonsTaken = 0;
     this.chance = Chance(new Date().getTime());
   },
 
@@ -123,6 +122,7 @@ exports.GameFsm = machina.Fsm.extend({
           type: 'new-player',
           message: {
             avatar: msg.avatar.img,
+            playerId: msg.player.playerId
           }
         });
       },
@@ -153,6 +153,10 @@ exports.GameFsm = machina.Fsm.extend({
         });
 
         this.players[0].incoming_cards(deck);
+
+        this.needSpooners = this.players.map(function (player) {
+          return player.playerId;
+        });
       },
 
       'new-player': function (socket) {
@@ -177,12 +181,13 @@ exports.GameFsm = machina.Fsm.extend({
           type: 'pass',
           message: {
             player: message.player.playerId,
+            nextPlayer: this.nextPlayer(message.player.playerId).playerId,
           }
         });
       },
 
       puzzle: function (message) {
-        message.player.emit_message('puzzle-length', {
+        this.io.to(this.gameId).emit('puzzle-length', {
           playerCount: this.players.length,
         });
       },
@@ -199,22 +204,23 @@ exports.GameFsm = machina.Fsm.extend({
           }
         });
 
-        this.spoonsTaken++;
+        this.needSpooners = this.needSpooners.filter(function (playerId) {
+          return playerId !== message.player.playerId;
+        });
 
-        // tell the clients? who knows?
-
-        // todo tell chromecast
-
-        // todo 
-        if (this.spoonsTaken == this.players.length - 1) {
+        if (this.needSpooners.length === 1) {
           // we're done ... do something
-          this.io.to(this.gameId).emit('game-end');
+          console.log(this.needSpooners[0], 'lost');
+          var loser = _.findWhere(this.players, {playerId: this.needSpooners[0]})
+
+          this.io.to(this.gameId).emit('game-end', {
+            loser: loser.avatar.img,
+          });
           this.transition('lobby');
         }
       },
 
       _onExit: function () {
-        this.spoonsTaken = 0;
         this.players.forEach(function (player) {
           player.ready = false;
         });
@@ -285,6 +291,10 @@ exports.GameFsm = machina.Fsm.extend({
 
     this.players = this.players.filter(function (p) {
       return p.playerId !== player.playerId;
+    });
+
+    this.needSpooners = this.needSpooners.filter(function (playerId) {
+      return playerId !== player.playerId;
     });
 
     if (this.players.length < 2) {

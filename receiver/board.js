@@ -38,6 +38,7 @@ var castMachine = new machina.Fsm({
 
         var player = {
           avatar: msg.avatar,
+          playerId: msg.playerId,
           number: this.players.length,
         };
 
@@ -81,10 +82,10 @@ var castMachine = new machina.Fsm({
                 .attr('width', 0)
                 .attr('height', 0)
                 .transition()
-                .attr('x', function (player) {
+                .attr('x', function (player, index) {
                   return (castMachine.x_radius * Math.cos(player.number / castMachine.players.length * 2 * Math.PI)) + (castMachine.width/2) - (castMachine.avatar_size/2) ;
                 })
-                .attr('y', function (player) {
+                .attr('y', function (player, index) {
                   return (castMachine.y_radius * Math.sin(player.number / castMachine.players.length * 2 * Math.PI)) + (castMachine.height/2) - (castMachine.avatar_size/2);
                 })
                 .attr('width', castMachine.avatar_size)
@@ -158,6 +159,11 @@ var castMachine = new machina.Fsm({
 
       pass: function (msg) {
         console.log('pass', msg);
+
+        var player = _.findWhere(this.players, {playerId: msg.player});
+        var nextPlayer = _.findWhere(this.players, {playerId: msg.nextPlayer});
+        console.log(player, 'passes to', nextPlayer);
+
       },
 
       'game-end': function (msg) {
