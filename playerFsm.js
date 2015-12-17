@@ -90,8 +90,6 @@ exports.PlayerFsm = machina.Fsm.extend({
   },
 
   new_incoming_card: function (card) {
-    console.log('this player got an incoming card and currently has ' + this.incoming.length + ' in queue');
-
     // Send everytime now to attempt a brute force fix of our non-passing bug
     // if (this.incoming.length == 0) {
       this.emit_message('incoming-available', {available: true});

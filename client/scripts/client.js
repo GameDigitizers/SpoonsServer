@@ -49,8 +49,9 @@ var clientFsm = new machina.Fsm({
           }
           return null;
         }
-
       };
+      this.hand.cards.sort(cardSorter);
+
       this.cardCountChange();
       this.handle('card-change');
     }.bind(this));
@@ -342,6 +343,7 @@ var clientFsm = new machina.Fsm({
         var imageSelection = dataSelection
           .enter()
           .append('svg:image')
+          .sort(cardSorter)
           .attr('id', function(theCard) {
             return theCard.id;
           })
@@ -571,6 +573,8 @@ var clientFsm = new machina.Fsm({
         console.log('keep card _onEnter', this.keepCard);
 
         this.hand.cards.push(this.keepCard);
+        this.hand.cards.sort(cardSorter);
+
         console.log(this.hand);
 
         var dataSelection = this.handSelection.selectAll('.card')
@@ -587,6 +591,8 @@ var clientFsm = new machina.Fsm({
           .attr('xlink:href', function(theCard) {
             return 'images/' + theCard.src;
           });
+
+        this.handSelection.selectAll('image').sort(cardSorter);
 
         d3.select('.the-pending-card').remove();
 
@@ -642,11 +648,6 @@ var clientFsm = new machina.Fsm({
         })
         .transition()
         .attr('x', function(theCard, index) {
-          var elem = d3.select(this);
-          var oldX = elem.attr('x');
-          console.log(oldX);
-          var oldY = elem.attr('y');
-          console.log(oldY);
           // give the cards 90% of the height, and split the other 10% for the spacing
           var passCardHeight = that.height * 0.8 / that.hand.cards.length;
           // var passCardSpaceHeight = (that.height * 0.2) / (that.hand.cards.length + 1);
@@ -686,3 +687,41 @@ $(window).resize(function() {
   console.log('resizing');
   clientFsm.resize();
 });
+
+
+function cardScore (card) {
+  var value = 0;
+  if (card.value === 'king') {
+    value = 13;
+  } else if (card.value === 'queen') {
+    value = 12;
+  } else if (card.value === 'jack') {
+    value = 11;
+  } else if (card.value === 'ace') {
+    value = 1;
+  } else {
+    value = card.value;
+  }
+
+  value = value * 10;
+
+  var suitValues = {
+    "spades": 3,
+    "hearts": 2,
+    "diamonds": 1,
+    "clubs": 0,
+  };
+
+  return value + suitValues[card.suit];
+};
+
+function cardSorter (a, b) {
+  console.log('cardSorter', a.id, b.id);
+  if (cardScore(a) < cardScore(b)) {
+    console.log('a<b');
+    return -1;
+  } else {
+    console.log('a>b');
+    return 1;
+  }
+}

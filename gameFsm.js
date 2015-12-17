@@ -270,7 +270,12 @@ exports.GameFsm = machina.Fsm.extend({
   removePlayer: function (player) {
     console.log('We have lost a player folks! removing from this.players');
 
-    _.findWhere(this.available_avatars, {img:player.avatar.img}).taken = false;
+    if (player.hasOwnProperty('avatar') && player.avatar && player.avatar.hasOwnProperty('img')) {
+      var newlyAvailableAvatar = _.findWhere(this.available_avatars, {img:player.avatar.img})
+      if (newlyAvailableAvatar) {
+        newlyAvailableAvatar.taken = false;
+      }
+    }
 
     var nextPlayer = this.nextPlayer(player.playerId);
     nextPlayer.incoming_cards(player.incoming);
