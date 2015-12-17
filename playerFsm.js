@@ -21,6 +21,8 @@ exports.PlayerFsm = machina.Fsm.extend({
       if (data.toState == 'play') {
         console.log("transitioning to play");
         this.transition('play');
+      } else if (data.toState == 'lobby') {
+        this.transition('waiting');
       }
     }.bind(this));
   },
@@ -73,10 +75,16 @@ exports.PlayerFsm = machina.Fsm.extend({
 
         if (pass_index > -1) {
           var card = this.hand.splice(pass_index, 1)[0];
-          this.next_player.new_incoming_card(card);
+          var nextPlayer = this.game.nextPlayer(this.playerId);
+          nextPlayer.new_incoming_card(card);
         } else {
           console.log(chalk.red.bold("Client passed card not in hand"));
         }
+      },
+
+      _onExit: function () {
+        this.incoming = [];
+        this.hand = [];
       }
     }
   },
@@ -93,7 +101,7 @@ exports.PlayerFsm = machina.Fsm.extend({
   },
 
   incoming_cards: function (cards) {
-    this.incoming = cards;
+    this.incoming = this.incoming.concat(cards);
     this.emit_message('incoming-available', {available: true});
   },
 

@@ -82,6 +82,7 @@ exports.GameFsm = machina.Fsm.extend({
 
     this.chromecasts = [];
     this.players = [];
+    this.playerQueue = [];
 
     this.available_avatars = INITIAL_AVATARS;
 
@@ -96,8 +97,18 @@ exports.GameFsm = machina.Fsm.extend({
 
   states: {
     lobby: {
-      'new-player': function (player) {
-        player.chooseAvatar(this.available_avatars);
+      _onEnter: function () {
+        console.log("adding queued " + this.playerQueue.length + " players to game");
+        this.playerQueue.forEach(function (socket) {
+          this.createPlayer(socket);
+        }.bind(this));
+
+        this.playerQueue = [];
+      },
+
+      'new-player': function (socket) {
+        console.log('new player in gameFSM ;');
+        this.createPlayer(socket);
       },
 
       'avatar-choice': function (msg) {
@@ -139,20 +150,25 @@ exports.GameFsm = machina.Fsm.extend({
         });
 
         this.players[0].incoming_cards(deck);
+      },
 
-        // Tell everyone who to pass to
-        this.players[this.players.length-1].next_player = this.players[0];
-        for (i = 1; i < this.players.length; i++) {
-          this.players[i-1].next_player = this.players[i];
-        }
+      'new-player': function (socket) {
+        console.log('got new player but game in progess!');
+        this.playerQueue.push(socket);
+
+        var currentAvatars = this.players.map(function (player) {
+          return player.avatar.img;
+        });
+
+        socket.emit('enqueued', currentAvatars);
       },
 
       pass: function (message) {
-        console.log(chalk.green.bold('P' + message.player.playerId) + 
-          ' passes ' + 
-          chalk.blue.bold(message.value + toSymbol(message.suit)) + ' ' + 
-          ' to ' +
-          chalk.green.bold('P' + message.player.next_player.playerId));
+        // console.log(chalk.green.bold('P' + message.player.playerId) + 
+        //   ' passes ' + 
+        //   chalk.blue.bold(message.value + toSymbol(message.suit)) + ' ' + 
+        //   ' to ' +
+        //   chalk.green.bold('P' + message.player.next_player.playerId));
 
         this.chromecast_message({
           type: 'pass',
@@ -198,7 +214,6 @@ exports.GameFsm = machina.Fsm.extend({
         this.spoonsTaken = 0;
         this.players.forEach(function (player) {
           player.ready = false;
-          player.next_player = null;
         });
       }
     }
@@ -238,19 +253,53 @@ exports.GameFsm = machina.Fsm.extend({
   },
 
   newPlayer: function (socket) {
+    this.handle('new-player', socket);
+  },
+
+  nextPlayer: function (playerId) {
+    var index = 0;
+    for (var i = this.players.length - 1; i >= 0; i--) {
+      if (this.players[i].playerId === playerId) {
+        index = (i + 1) % this.players.length;
+      }
+    }
+
+    return this.players[index];
+  },
+
+  removePlayer: function (player) {
+    console.log('We have lost a player folks! removing from this.players');
+
+    _.findWhere(this.available_avatars, {img:player.avatar.img}).taken = false;
+
+    var nextPlayer = this.nextPlayer(player.playerId);
+    nextPlayer.incoming_cards(player.incoming);
+
+    this.players = this.players.filter(function (p) {
+      return p.playerId !== player.playerId;
+    });
+
+    if (this.players.length < 2) {
+      this.io.to(this.gameId).emit('game-end');
+      this.transition('lobby');
+    }
+  },
+
+  createPlayer: function (socket) {
     var player = new PlayerFsm({
       socket:   socket,
       game:     this,
-      playerId: this.players.length,
+      playerId: socket.id,
     });
     this.players.push(player);
 
     player.socket.join(this.gameId);
     player.socket.on('disconnect', function () {
-      console.log('We have lost a player folks!');
-    });
+      this.removePlayer(player);
+    }.bind(this));
 
-    this.handle('new-player', player);
+    player.chooseAvatar(this.available_avatars);
+    return player;
   },
 });
 

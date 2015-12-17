@@ -72,7 +72,6 @@ var clientFsm = new machina.Fsm({
       console.log('choose-avatar', msg);
       this.avatars = msg.avatars;
 
-      this.transition('pick-avatar');
       this.handle('avatar-selection');
     }.bind(this));
 
@@ -80,12 +79,16 @@ var clientFsm = new machina.Fsm({
       this.transition('play');
     }.bind(this));
 
-    this.socket.on('puzzle-length', function(msg) {
+    this.socket.on('puzzle-length', function (msg) {
       this.handle('puzzle-length', msg);
     }.bind(this));
 
-    this.socket.on('got-spoon', function(msg) {
+    this.socket.on('got-spoon', function (msg) {
       this.handle('got-spoon', msg);
+    }.bind(this));
+
+    this.socket.on('enqueued', function (msg) {
+      this.handle('enqueued', msg );
     }.bind(this));
 
     this.resizeRecalc();
@@ -144,11 +147,9 @@ var clientFsm = new machina.Fsm({
       .attr('xlink:href', 'images/blueGrid.png')
       .on('click', function() {
         var pendingCard = d3.selectAll('.the-pending-card');
-        if (!pendingCard.empty()) { //if we don't already have a pending card then we request a new one (so no cheating and taking 2 right now)
-          this.socket.emit('pass', pendingCard.datum());
-          pendingCard.remove();
+        if (pendingCard.empty()) {
+          this.socket.emit('pull-card');
         }
-        this.socket.emit('pull-card');
       }.bind(this));
 
     var resize = function() {
@@ -193,12 +194,27 @@ var clientFsm = new machina.Fsm({
         });
 
         // this.transition('pick-avatar');
-      }
+      },
+
+      'avatar-selection': function () {
+        console.log('in need-game going to pick-avatar');
+        this.transition('pick-avatar');
+      },
+
+      'enqueued': function (avatars) {
+        this.svg.append('text')
+            .attr('x', this.width / 2)
+            .attr('y', this.height / 2)
+            .attr('text-align', 'center')
+            .text('Game in progress! Wait for these dudes/dudettes...');
+
+        // TODO draw avatars which is list of img paths
+      },
     },
 
     'pick-avatar': {
       _onEnter: function() {
-        // this.handle('avatar-selection');
+        this.handle('avatar-selection');
       },
 
       'avatar-selection': function () {
@@ -223,9 +239,7 @@ var clientFsm = new machina.Fsm({
           })
           .style('opacity', function (d) {
             // debugger
-            console.log(d);
             if (d.taken) {
-              console.log('gonna do .2');
               return 0.2;
             }
             else {
@@ -494,7 +508,7 @@ var clientFsm = new machina.Fsm({
       'finished-puzzle': function (numDots) { //finished the current puzzle
         console.log('finished-puzzle', numDots, this.playerCount);
         this.puzzlesCompleted++;
-        if (this.playerCount === numDots) {
+        if (this.playerCount <= numDots) {
           this.transition('puzzle-end');
         } else {
           this.handle('configure-puzzle');
