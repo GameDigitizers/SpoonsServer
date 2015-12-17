@@ -31,6 +31,7 @@ var castMachine = new machina.Fsm({
   states: {
     'lobby': {
       _onEnter: function () {
+        this.handle('reflow-players');
       },
 
       'new-player': function (msg) {
@@ -167,6 +168,7 @@ var castMachine = new machina.Fsm({
       },
 
       'game-end': function (msg) {
+        this.loser = msg.loser;
         this.transition('game-end');
       },
 
@@ -187,10 +189,21 @@ var castMachine = new machina.Fsm({
       _onEnter: function () {
         console.log("in game-end state");
 
+        var loser = _.findWhere(this.players, {avatar: this.loser});
+        this.loserSel = d3.select('#player_' + loser.number + ' image');
+
+        this.loserX = this.loserSel.attr('x');
+        this.loserY = this.loserSel.attr('y');
+        
+        this.loserSel
+          .transition()
+          .attr('x', this.width / 2 - this.avatar_size / 2)
+          .attr('y', this.height / 2 - this.avatar_size / 2);
+
         this.message = this.svg.append('text')
           .attr('x', this.width / 2 - 50)
-          .attr('y', this.height / 2)
-          .text('Some folks won and one folk lost');
+          .attr('y', this.height / 2 + this.avatar_size / 2 + 15)
+          .text('LOSER!');
       },
 
       play: function () {
@@ -199,6 +212,11 @@ var castMachine = new machina.Fsm({
 
       _onExit: function () {
         this.message.remove();
+
+        this.loserSel
+          .transition()
+          .attr('x', this.loserX)
+          .attr('y', this.loserY);
       }
     }
   },
