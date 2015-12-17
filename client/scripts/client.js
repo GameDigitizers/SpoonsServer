@@ -50,7 +50,7 @@ var clientFsm = new machina.Fsm({
           return null;
         }
       };
-      this.hand.cards.sort(cardSorter);
+      // this.hand.cards.sort(cardSorter);
 
       this.cardCountChange();
       this.handle('card-change');
@@ -343,7 +343,7 @@ var clientFsm = new machina.Fsm({
         var imageSelection = dataSelection
           .enter()
           .append('svg:image')
-          .sort(cardSorter)
+          // .sort(cardSorter)
           .attr('id', function(theCard) {
             return theCard.id;
           })
@@ -573,7 +573,7 @@ var clientFsm = new machina.Fsm({
         console.log('keep card _onEnter', this.keepCard);
 
         this.hand.cards.push(this.keepCard);
-        this.hand.cards.sort(cardSorter);
+        // this.hand.cards.sort(cardSorter);
 
         console.log(this.hand);
 
@@ -592,7 +592,7 @@ var clientFsm = new machina.Fsm({
             return 'images/' + theCard.src;
           });
 
-        this.handSelection.selectAll('image').sort(cardSorter);
+        // this.handSelection.selectAll('image').sort(cardSorter);
 
         d3.select('.the-pending-card').remove();
 

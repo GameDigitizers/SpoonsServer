@@ -129,7 +129,10 @@ exports.GameFsm = machina.Fsm.extend({
 
       'player-ready': function (message) {
         message.player.ready = message.ready;
+        this.handle('start-game-check');
+      },
 
+      'start-game-check': function () {
         var all_ready = _.every(this.players, function (player) {
           return player.ready;
         });
@@ -137,7 +140,7 @@ exports.GameFsm = machina.Fsm.extend({
         if (this.players.length > 1 && all_ready) {
           this.transition('play');
         }
-      }
+      },
     },
 
     play: {
@@ -288,6 +291,8 @@ exports.GameFsm = machina.Fsm.extend({
       this.io.to(this.gameId).emit('game-end');
       this.transition('lobby');
     }
+
+    this.handle('start-game-check');
   },
 
   createPlayer: function (socket) {
