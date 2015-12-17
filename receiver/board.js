@@ -165,6 +165,19 @@ var castMachine = new machina.Fsm({
         var nextPlayer = _.findWhere(this.players, {playerId: msg.nextPlayer});
         console.log(player, 'passes to', nextPlayer);
 
+        this.svg.append('svg:image')
+          .classed('card-stack', true)
+          .attr('x', player.x + castMachine.avatar_size / 2)
+          .attr('y', player.y + castMachine.avatar_size)
+          .attr('width', this.card_width)
+          .attr('height', this.card_height)
+          .attr('xlink:href', function (player) {
+            return 'images/blueGrid.png';
+          })
+          .transition()
+          .attr('x', nextPlayer.x + castMachine.avatar_size / 2)
+          .attr('y', nextPlayer.y + castMachine.avatar_size);
+
       },
 
       'game-end': function (msg) {
