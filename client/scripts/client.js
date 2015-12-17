@@ -204,13 +204,20 @@ var clientFsm = new machina.Fsm({
 
       'enqueued': function (avatars) {
         this.svg.append('text')
-            .attr('x', this.width / 2)
-            .attr('y', this.height / 2)
-            .attr('text-align', 'center')
-            .text('Game in progress! Wait for these dudes/dudettes...');
+          .attr('id', 'in-progress')
+          .attr('x', this.width / 2)
+          .attr('y', this.height / 2)
+          .attr('text-align', 'center')
+          .text('Game in progress! Wait for these dudes/dudettes...');
 
         // TODO draw avatars which is list of img paths
       },
+
+      _onExit: function () {
+        if (!this.svg.select('#in-progress').empty()) {
+          this.svg.select('#in-progress').remove();
+        }
+      }
     },
 
     'pick-avatar': {
@@ -222,6 +229,7 @@ var clientFsm = new machina.Fsm({
         console.log('avatar-selection', this.svg, this.avatars);
         this.svg.selectAll('.avatar').remove();
         
+        var that = this;
         this.svg.selectAll('.avatar')
           .data(this.avatars)
           .enter()
@@ -248,12 +256,14 @@ var clientFsm = new machina.Fsm({
             }
           })
           .on('click', function(avatar) {
-            this.socket.emit('avatar-choice', {
+            that.socket.emit('avatar-choice', {
               avatar: avatar
             });
+            d3.select(this).classed('avatar', false);
+            d3.select(this).classed('my-avatar', true);
             console.log('transitioning to before-start');
-            this.transition('before-start');
-          }.bind(this));
+            that.transition('before-start');
+          });
       },
 
       _onExit: function() {
@@ -297,8 +307,10 @@ var clientFsm = new machina.Fsm({
             return 'images/spoon.png';
           })
           .on('click', function() {
-            this.spoonImage.remove();
-            this.transition('puzzle');
+            if (this.checkForWin()) {
+              this.spoonImage.remove();
+              this.transition('puzzle');
+            }
           }.bind(this));
 
         this.messageBox = this.svg.append('text')
@@ -309,12 +321,15 @@ var clientFsm = new machina.Fsm({
 
     play: {
       _onEnter: function() {
-
+        this.svg.select('.my-avatar')
+            .transition()
+            .attr('x', this.width - this.avatarSize - 15)
+            .attr('y', 0 + 15);
 
         var resize = function() {
           this.spoonImage
-            .attr('x', this.spoonSettings.x)
-            .attr('y', this.spoonSettings.y)
+            .attr('x', this.width - this.avatarSize + this.spoonSettings.width / 2 - 15)
+            .attr('y', 0 + this.avatarSize + 30)
             .attr('width', this.spoonSettings.width)
             .attr('height', this.spoonSettings.height);
         }.bind(this);
@@ -336,6 +351,8 @@ var clientFsm = new machina.Fsm({
       },
 
       'card-change': function() {
+        this.checkForWin();
+
         console.log('Drawing hand');
         var dataSelection = this.handSelection.selectAll('.card')
           .data(this.hand.cards);
@@ -539,7 +556,9 @@ var clientFsm = new machina.Fsm({
 
     'game-end': {
       _onEnter: function() {
-        this.spoonImage.remove();
+        if (this.spoonImage && !this.spoonImage.empty()) {
+          this.spoonImage.remove();
+        }
         this.svg.append('text')
           .classed('game-end', true)
           .attr('x', this.width / 2)
@@ -576,6 +595,7 @@ var clientFsm = new machina.Fsm({
         // this.hand.cards.sort(cardSorter);
 
         console.log(this.hand);
+        this.checkForWin();
 
         var dataSelection = this.handSelection.selectAll('.card')
           .data(this.hand.cards);
@@ -680,6 +700,34 @@ var clientFsm = new machina.Fsm({
         .ease('linear')
         .duration(250);
     }.bind(this), 250);
+  },
+
+  checkForWin: function () {
+    if (!this.hand || !this.hand.cards || this.hand.cards.length === 0) {
+      return false;
+    }
+
+    var counts = this.hand.cards.reduce(function (prev, card) {
+      if (prev.hasOwnProperty(card.value)) {
+        prev[card.value]++;
+      } else {
+        prev[card.value] = 1;
+      }
+      return prev;
+    }, {});
+
+    var winning = Object.keys(counts).length <= 2;
+
+    // var winning = this.hand.cards.some(function (card) {
+    //   return card.value === 'king' || card.value === 'queen';
+    // });
+
+    // var firstValue = this.hand.cards[0].value;
+    // var winning = this.hand.cards.every(function (card) {
+    //   return card.value === firstValue;
+    // });
+
+    return winning;
   }
 });
 
