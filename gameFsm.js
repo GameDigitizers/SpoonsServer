@@ -132,6 +132,12 @@ exports.GameFsm = machina.Fsm.extend({
         this.handle('start-game-check');
       },
 
+      jump: function (message) {
+        this.chromecast_message('jump', {
+          playerId: message.player.playerId,
+        });
+      },
+
       'start-game-check': function () {
         var all_ready = _.every(this.players, function (player) {
           return player.ready;
@@ -145,8 +151,6 @@ exports.GameFsm = machina.Fsm.extend({
 
     play: {
       _onEnter: function () {
-        this.io.to(this.gameId).emit('play');
-
         var deck = this.chance.shuffle(cards);
         _.forEach(this.players, function (player) {
           player.set_hand(deck.splice(0, 4));
@@ -156,6 +160,10 @@ exports.GameFsm = machina.Fsm.extend({
 
         this.needSpooners = this.players.map(function (player) {
           return player.playerId;
+        });
+
+        this.io.to(this.gameId).emit('play', {
+          startingPlayerId: this.players[0].playerId,
         });
       },
 

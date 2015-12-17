@@ -261,7 +261,11 @@ var clientFsm = new machina.Fsm({
               avatar: avatar
             });
             d3.select(this).classed('avatar', false);
-            d3.select(this).classed('my-avatar', true);
+            d3.select(this)
+                .classed('my-avatar', true)
+                .on('click', function () {
+                  that.socket.emit('jump');
+                });
             console.log('transitioning to before-start');
             that.transition('before-start');
           });
