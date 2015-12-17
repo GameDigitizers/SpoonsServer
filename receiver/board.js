@@ -13,6 +13,7 @@ var castMachine = new machina.Fsm({
     });
 
     this.registerMessage('new-player');
+    this.registerMessage('jump');
     this.registerMessage('play');
     this.registerMessage('pass');
     this.registerMessage('take-spoon');
@@ -45,6 +46,28 @@ var castMachine = new machina.Fsm({
 
         this.players.push(player);
         this.handle('reflow-players');
+
+      },
+
+      jump: function (msg) {
+        var player = _.findWhere(this.players, {playerId: msg.playerId});
+        var selector = '#player_' + player.number + ' image';
+        console.log('jump message', msg, selector);
+
+        var jumpHeight = 30;
+        var originalY = d3.select(selector).attr('y');
+
+        d3.select(selector)
+          .transition()
+            .attr('y', originalY - jumpHeight  )    
+            .ease('linear')
+            // .duration(1000)
+            .each('end',function() {          
+              d3.select(this)
+                .transition()                  
+                .attr('y', originalY )    
+                // .duration(1000);         
+             });
 
       },
 

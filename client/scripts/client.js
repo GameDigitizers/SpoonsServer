@@ -257,6 +257,10 @@ var clientFsm = new machina.Fsm({
             }
           })
           .on('click', function(avatar) {
+            if (avatar.taken) {
+              return;
+            }
+            
             that.socket.emit('avatar-choice', {
               avatar: avatar
             });
