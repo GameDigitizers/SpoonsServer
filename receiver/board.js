@@ -1,4 +1,3 @@
-
 var min_avatar_height = 125;
 var max_avatar_height = 250;
 
@@ -18,6 +17,7 @@ var castMachine = new machina.Fsm({
     this.registerMessage('pass');
     this.registerMessage('take-spoon');
     this.registerMessage('game-end');
+    this.registerMessage('starting-info');
   },
 
   registerMessage: function (msgType) {
@@ -134,20 +134,6 @@ var castMachine = new machina.Fsm({
 
     'table': {
       _onEnter: function () {
-        d3.select('#player_0')
-          .append('svg:image')
-          .classed('card-stack', true)
-          .attr('x', function (player) {
-            return player.x + castMachine.avatar_size / 2;
-          })
-          .attr('y', function (player) {
-            return player.y + castMachine.avatar_size;
-          })
-          .attr('width', this.card_width)
-          .attr('height', this.card_height)
-          .attr('xlink:href', function (player) {
-            return 'images/blueGrid.png';
-          });
 
         this.spoons = [];
         for (i=0; i < this.players.length-1; i++) {
@@ -181,6 +167,28 @@ var castMachine = new machina.Fsm({
             .attr('repeatCount', "indefinite");
       },
 
+      'starting-info': function (data) {
+        this.dealingPlayerId = data.startingPlayerId;
+        this.startingDeckLength = data.startingDeckLength;
+
+        var dealingPlayer = this.players.filter(function (player) {
+          return player.playerId === this.dealingPlayerId;
+        }.bind(this))[0];
+
+        var dealerSelection = d3.select('#player_'+dealingPlayer.number);
+        
+        for (var i = 0; i < this.startingDeckLength; i++) {
+          dealerSelection
+            .append('svg:image')
+            .classed('card-stack player-'+dealingPlayer.playerId, true)
+            .attr('x', dealingPlayer.x + castMachine.avatar_size / 2 + i*this.card_width/10)
+            .attr('y', dealingPlayer.y + castMachine.avatar_size + i*this.card_height/10)
+            .attr('width', this.card_width)
+            .attr('height', this.card_height)
+            .attr('xlink:href', 'images/blueGrid.png');
+        }
+      },
+
       pass: function (msg) {
         console.log('pass', msg);
 
@@ -188,19 +196,31 @@ var castMachine = new machina.Fsm({
         var nextPlayer = _.findWhere(this.players, {playerId: msg.nextPlayer});
         console.log(player, 'passes to', nextPlayer);
 
-        this.svg.append('svg:image')
-          .classed('card-stack', true)
-          .attr('x', player.x + castMachine.avatar_size / 2)
-          .attr('y', player.y + castMachine.avatar_size)
+        var passingPlayersCards = this.svg.selectAll('.player-'+player.playerId)[0];
+        var passingPlayerCardIndex = passingPlayersCards.length;
+        var nextPlayerCardIndex = this.svg.selectAll('.player-'+nextPlayer.playerId)[0].length;
+
+        var cardBeingPassed;
+        if (passingPlayersCards && passingPlayersCards.length > 0) {
+          cardBeingPassed = d3.select(passingPlayersCards[passingPlayersCards.length-1]);
+          cardBeingPassed.remove();
+        }
+
+        cardBeingPassed = this.svg.append('svg:image')
+          .classed('card-stack player-'+nextPlayer.playerId, true)
+          .attr('x', player.x + castMachine.avatar_size / 2 + this.card_width/10*passingPlayerCardIndex)
+          .attr('y', player.y + castMachine.avatar_size + this.card_height/10*passingPlayerCardIndex)
           .attr('width', this.card_width)
           .attr('height', this.card_height)
           .attr('xlink:href', function (player) {
             return 'images/blueGrid.png';
-          })
-          .transition()
-          .attr('x', nextPlayer.x + castMachine.avatar_size / 2)
-          .attr('y', nextPlayer.y + castMachine.avatar_size);
+          });  
+        
 
+        cardBeingPassed
+          .transition()
+          .attr('x', nextPlayer.x + castMachine.avatar_size / 2 + this.card_width/10*nextPlayerCardIndex)
+          .attr('y', nextPlayer.y + castMachine.avatar_size + this.card_height/10*nextPlayerCardIndex);
       },
 
       'game-end': function (msg) {
@@ -306,7 +326,7 @@ var castMachine = new machina.Fsm({
 
   randomInnerPath: function () {
     var theta =  chance.natural({ min:0, max:2*Math.PI });
-    str = 'translate(' +
+    var str = 'translate(' +
          // x location of a random point on the inner ellipse, accounting for spoon size and the buffer
          ( ( (castMachine.inner_x_radius - castMachine.spoon_buffer) * Math.cos( theta ) ) + (castMachine.width/2) - castMachine.spoon_size ) +
          ',' + 
