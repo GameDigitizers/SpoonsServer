@@ -133,8 +133,11 @@ exports.GameFsm = machina.Fsm.extend({
       },
 
       jump: function (message) {
-        this.chromecast_message('jump', {
-          playerId: message.player.playerId,
+        this.chromecast_message({
+          type: 'jump', 
+          message: {
+            playerId: message.player.playerId,
+          }
         });
       },
 
@@ -164,6 +167,7 @@ exports.GameFsm = machina.Fsm.extend({
 
         this.io.to(this.gameId).emit('play', {
           startingPlayerId: this.players[0].playerId,
+          startingDeckLength: this.players[0].incoming.length,
         });
       },
 
