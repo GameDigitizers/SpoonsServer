@@ -154,6 +154,8 @@ exports.GameFsm = machina.Fsm.extend({
 
     play: {
       _onEnter: function () {
+        this.io.to(this.gameId).emit('play');
+
         var deck = this.chance.shuffle(cards);
         _.forEach(this.players, function (player) {
           player.set_hand(deck.splice(0, 4));
@@ -165,9 +167,12 @@ exports.GameFsm = machina.Fsm.extend({
           return player.playerId;
         });
 
-        this.io.to(this.gameId).emit('play', {
-          startingPlayerId: this.players[0].playerId,
-          startingDeckLength: this.players[0].incoming.length,
+        this.chromecast_message({
+          type: 'starting-info',
+          message: {
+            startingPlayerId: this.players[0].playerId,
+            startingDeckLength: this.players[0].incoming.length,
+          }
         });
       },
 
@@ -310,7 +315,9 @@ exports.GameFsm = machina.Fsm.extend({
     });
 
     if (this.players.length < 2) {
-      this.io.to(this.gameId).emit('game-end');
+      this.io.to(this.gameId).emit('game-end', {
+        loser: this.players[0].avatar.img,
+      });
       this.transition('lobby');
     }
 
