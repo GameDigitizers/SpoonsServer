@@ -260,7 +260,7 @@ var clientFsm = new machina.Fsm({
             if (avatar.taken) {
               return;
             }
-            
+
             that.socket.emit('avatar-choice', {
               avatar: avatar
             });
@@ -450,6 +450,12 @@ var clientFsm = new machina.Fsm({
         if (this.nextCard) {
           this.nextCard.remove();
         }
+
+        this.svg.append('text')
+          .attr('id', 'help-text')
+          .attr('x', 15)
+          .attr('y', 20)
+          .text('Tap the dots in order to grab a spoon!');
       },
 
       'puzzle-length': function (message) {
@@ -534,7 +540,7 @@ var clientFsm = new machina.Fsm({
             return d[1];
           })
           .text(function (d, i) {
-            return i;
+            return i+1;
           });
       },
 
@@ -550,6 +556,7 @@ var clientFsm = new machina.Fsm({
 
       _onExit: function () {
         this.svg.selectAll('.node').remove();
+        this.svg.select('#help-text').remove();
       }
     },
 

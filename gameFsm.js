@@ -79,6 +79,7 @@ exports.GameFsm = machina.Fsm.extend({
     console.log('In GameFSM initialize ', gameId);
 
     this.io = io;
+    this.startingPlayerIndex = 0;
 
     this.chromecasts = [];
     this.players = [];
@@ -156,12 +157,14 @@ exports.GameFsm = machina.Fsm.extend({
       _onEnter: function () {
         this.io.to(this.gameId).emit('play');
 
+        this.startingPlayerIndex = (this.startingPlayerIndex + 1) % this.players.length;
+
         var deck = this.chance.shuffle(cards);
         _.forEach(this.players, function (player) {
           player.set_hand(deck.splice(0, 4));
         });
 
-        this.players[0].incoming_cards(deck);
+        this.players[this.startingPlayerIndex].incoming_cards(deck);
 
         this.needSpooners = this.players.map(function (player) {
           return player.playerId;
@@ -170,8 +173,8 @@ exports.GameFsm = machina.Fsm.extend({
         this.chromecast_message({
           type: 'starting-info',
           message: {
-            startingPlayerId: this.players[0].playerId,
-            startingDeckLength: this.players[0].incoming.length,
+            startingPlayerId: this.players[this.startingPlayerIndex].playerId,
+            startingDeckLength: this.players[this.startingPlayerIndex].incoming.length,
           }
         });
       },
@@ -316,7 +319,7 @@ exports.GameFsm = machina.Fsm.extend({
 
     if (this.players.length < 2) {
       this.io.to(this.gameId).emit('game-end', {
-        loser: this.players[0].avatar.img,
+        loser: 'blueGrid.png',
       });
       this.transition('lobby');
     }

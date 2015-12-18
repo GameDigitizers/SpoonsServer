@@ -165,6 +165,8 @@ var castMachine = new machina.Fsm({
               return chance.natural({min:0.5, max: 3}) + 's';
             })
             .attr('repeatCount', "indefinite");
+
+        d3.selectAll('.card-stack').remove();
       },
 
       'starting-info': function (data) {
