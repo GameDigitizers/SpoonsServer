@@ -313,9 +313,11 @@ exports.GameFsm = machina.Fsm.extend({
       return p.playerId !== player.playerId;
     });
 
-    this.needSpooners = this.needSpooners.filter(function (playerId) {
-      return playerId !== player.playerId;
-    });
+    if (this.needSpooners && this.needSpooners.length > 0) {
+      this.needSpooners = this.needSpooners.filter(function (playerId) {
+        return playerId !== player.playerId;
+      });
+    }
 
     if (this.players.length < 2) {
       this.io.to(this.gameId).emit('game-end', {
