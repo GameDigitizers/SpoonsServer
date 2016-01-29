@@ -1,0 +1,22 @@
+html {
+  height: 100%;
+}
+body {
+  background-color: #eee;
+  height: 100%;
+}
+
+.container {
+  background-color: #A81889;
+  margin-top: 50px;
+  /*box-shadow: */
+  /*height: 100vh;*/
+}
+
+nav {
+  background-color: #A81889;
+}
+
+.input-lg{
+  margin-top: 200px;
+}

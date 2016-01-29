@@ -102,6 +102,12 @@ app.use(express.static(__dirname + '/receiver'));
 app.use(express.static(__dirname + '/client'));
 app.use(express.static(__dirname + '/sender'));
 
+app.get('/:gameName', function(req, res){
+//   //do something with the server
+  console.log(req.params.gameName);
+  res.sendFile(__dirname + '/index.html');
+});
+
 http.listen(3339, function(){
   console.log('listening on *:3339');
 });
