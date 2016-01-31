@@ -1,0 +1,106 @@
+// http://paletton.com/palette.php?uid=50m0u0kEELNlBNGrOMnLhuKLnnP
+
+.myhero {
+  width: 80%;
+  height: 100%;
+  margin: auto;
+}
+
+.myhero > div {
+  position: relative;
+  top: 50%;
+  -ms-transform: translateY(-50%);; /* IE 9 */
+  -webkit-transform: translateY(-50%);
+  transform: translateY(-50%);
+}
+
+span {
+  position: relative;
+  display: inline-block;
+  // margin: 30px 10px;
+  width: 100%;
+}
+
+.gate {
+  display: inline-block;
+  width: 100%;
+  padding: 10px 0 10px 15px;
+  font-family: "Open Sans", sans;
+  font-weight: 400;
+  color: #e60029;
+  background: #efefef;
+  border: 0;
+  border-radius: 3px;
+  outline: 0;
+  text-indent: 155px; // Arbitrary.
+  transition: all .3s ease-in-out;
+  
+  &::-webkit-input-placeholder {
+    color: #efefef;
+    text-indent: 0;
+    font-weight: 300;
+  }
+
+  + label {
+    display: inline-block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 10px 15px;
+    text-shadow: 0 1px 0 rgba(19,74,70,.4);
+    background: #BE4700;
+    transition: all .4s ease-in-out;
+    border-top-left-radius: 3px;
+    border-bottom-left-radius: 3px;
+    transform-origin: left bottom;
+    z-index: 99;
+    
+    &:before,
+    &:after {
+      content: "";
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+      border-radius: 3px;
+      background: #e60029;
+      transform-origin: left bottom;
+      transition: all .4s ease-in-out;
+      pointer-events: none;
+      z-index: -1;
+    }
+    &:before {
+      background: rgba(3,36,41,.2);
+      z-index: -2;
+      right: 20%;
+    }
+  }
+}
+span:nth-child(2) .gate {
+  text-indent: 85px;
+}
+span:nth-child(2) .gate:focus,
+span:nth-child(2) .gate:active{
+  text-indent: 0;
+}
+.gate:focus,
+.gate:active {
+  color: #e60029;
+  text-indent: 0;
+  background: #fff;
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
+  
+  &::-webkit-input-placeholder {
+    color: #aaa;
+  }
+  + label {
+    transform: rotate(-66deg);
+    border-radius: 3px;
+    
+    &:before {
+      transform: rotate(10deg);
+    }
+  }
+}

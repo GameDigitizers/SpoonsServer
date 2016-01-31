@@ -2,15 +2,23 @@ html {
   height: 100%;
 }
 body {
-  background-color: #eee;
+  background-color: #ffbd53;
   height: 100%;
 }
 
 .container {
-  background-color: #A81889;
-  margin-top: 50px;
-  /*box-shadow: */
-  /*height: 100vh;*/
+  height: 50%;
+  position: relative;
+  top: 50%;
+  -ms-transform: translateY(-50%);; /* IE 9 */
+  -webkit-transform: translateY(-50%);
+  transform: translateY(-50%);
+  background: #ff5f00;
+  color: #fff;
+  font-size: 21px;
+  border: 3px dashed #fff;
+  box-shadow: 0 0 0 20px #ff5f00, 10px 5px 30px 20px rgba(10,10,0,.5);
+  border-radius: 10px;
 }
 
 nav {
