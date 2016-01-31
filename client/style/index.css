@@ -2,7 +2,7 @@ html {
   height: 100%;
 }
 body {
-  background-color: #ffbd53;
+  background-color: #FFDD76;
   height: 100%;
 }
 
@@ -25,6 +25,19 @@ nav {
   background-color: #A81889;
 }
 
-.input-lg{
+.input-lg {
   margin-top: 200px;
+}
+
+.action-button
+{
+  margin: 15px auto;
+  width: 33%;
+  padding: 10px 40px;
+  font-family: "Open Sans", sans;
+  font-weight: 400;
+  text-align: center;
+  color: #FFF;
+  background-color: #FFBF00;
+  cursor: pointer;
 }

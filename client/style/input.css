@@ -22,7 +22,7 @@ span {
   padding: 10px 0 10px 15px;
   font-family: "Open Sans", sans;
   font-weight: 400;
-  color: #e60029;
+  color: #e60087;
   background: #efefef;
   border: 0;
   border-radius: 3px;
@@ -54,7 +54,7 @@ span {
       bottom: 0;
       left: 0;
       border-radius: 3px;
-      background: #e60029;
+      background: #e60087;
       transform-origin: left bottom;
       transition: all .4s ease-in-out;
       pointer-events: none;
@@ -73,7 +73,7 @@ span:nth-child(2) .gate:active {
 
 .gate:focus,
 .gate:active {
-  color: #e60029;
+  color: #e60087;
   text-indent: 0;
   background: #fff;
   border-top-right-radius: 3px;

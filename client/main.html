@@ -2,9 +2,12 @@
   <div>
     <form ng-submit="go()">
     <span>
-        <input class="gate" id="game-name" type="text" placeholder="Type it in here..." ng-model="gameName"/>
+        <input class="gate" id="game-name" type="text" placeholder="Where the spoons at?" ng-model="gameName"/>
         <label for="game-name">Game Name</label>
     </span>
+    <div class="action-button" ng-click="go()">
+        Let's play!
+    </div>
     </form>
   </div>
 </div>
