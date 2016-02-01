@@ -47,6 +47,7 @@ span {
     position: absolute;
     top: 0;
     left: 0;
+    width: 155px;
     padding: 10px 15px;
     text-shadow: 0 1px 0 rgba(19,74,70,.4);
     background: #BE4700;
@@ -78,15 +79,13 @@ span {
     }
   }
 }
-span:nth-child(2) .gate {
-  text-indent: 85px;
+
+span:nth-child(1) .gate {
+  margin-bottom: 15px;
 }
-span:nth-child(2) .gate:focus,
-span:nth-child(2) .gate:active{
-  text-indent: 0;
-}
-.gate:focus,
-.gate:active {
+
+.flip:focus,
+.flip:active {
   color: $label-color;
   text-indent: 0;
   background: #fff;

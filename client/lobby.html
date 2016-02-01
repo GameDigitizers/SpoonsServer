@@ -9,7 +9,11 @@
   <div>
     <form ng-submit="sendPlayerName()">
     <span>
-        <input class="gate" id="player-name" type="text" placeholder="What's your name..." ng-model="playerName"/>
+        <input ng-model="gameName" disabled class="gate" id="game-name" type="text" placeholder="What's your name..."/>
+        <label for="game-name">Game Name</label>
+    </span>
+    <span>
+        <input class="gate flip" id="player-name" type="text" placeholder="What's your name..." ng-model="playerName"/>
         <label for="player-name">Your Name</label>
     </span>
     <div class="action-button" ng-click="sendPlayerName()">

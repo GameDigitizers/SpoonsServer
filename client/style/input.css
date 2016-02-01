@@ -38,6 +38,7 @@ span {
     position: absolute;
     top: 0;
     left: 0;
+    width: 155px;
     padding: 10px 15px;
     text-shadow: 0 1px 0 rgba(19, 74, 70, 0.4);
     background: #BE4700;
@@ -64,27 +65,23 @@ span {
       z-index: -2;
       right: 20%; }
 
-span:nth-child(2) .gate {
-  text-indent: 85px; }
+span:nth-child(1) .gate {
+  margin-bottom: 15px; }
 
-span:nth-child(2) .gate:focus,
-span:nth-child(2) .gate:active {
-  text-indent: 0; }
-
-.gate:focus,
-.gate:active {
+.flip:focus,
+.flip:active {
   color: #e60087;
   text-indent: 0;
   background: #fff;
   border-top-right-radius: 3px;
   border-bottom-right-radius: 3px; }
-  .gate:focus::-webkit-input-placeholder,
-  .gate:active::-webkit-input-placeholder {
+  .flip:focus::-webkit-input-placeholder,
+  .flip:active::-webkit-input-placeholder {
     color: #aaa; }
-  .gate:focus + label,
-  .gate:active + label {
+  .flip:focus + label,
+  .flip:active + label {
     transform: rotate(-66deg);
     border-radius: 3px; }
-    .gate:focus + label:before,
-    .gate:active + label:before {
+    .flip:focus + label:before,
+    .flip:active + label:before {
       transform: rotate(10deg); }
