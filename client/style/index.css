@@ -21,6 +21,17 @@ body {
   border-radius: 10px;
 }
 
+.logo {
+  position: absolute;
+  width: 100%;
+  font-family: 'Gloria Hallelujah', cursive;
+  color: #ff5f00;
+  font-weight: 900;
+  font-size: 8em;
+  text-shadow: 1px 1px #000;
+  text-align: center;
+}
+
 nav {
   background-color: #A81889;
 }
@@ -32,10 +43,10 @@ nav {
 .action-button
 {
   margin: 15px auto;
-  width: 33%;
+  width: 50%;
   padding: 10px 40px;
   font-family: "Open Sans", sans;
-  font-weight: 400;
+  font-weight: 600;
   text-align: center;
   color: #FFF;
   background-color: #FFBF00;
