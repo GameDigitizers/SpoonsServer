@@ -52,3 +52,33 @@ nav {
   background-color: #FFBF00;
   cursor: pointer;
 }
+
+.container > div {
+  height: 100%;
+}
+
+.carousel {
+  position: relative;
+  top: 50%;
+  -ms-transform: translateY(-50%);; /* IE 9 */
+  -webkit-transform: translateY(-50%);
+  transform: translateY(-50%);
+}
+
+.carousel-inner>.item>a>img, .carousel-inner>.item>img, .img-responsive, .thumbnail a>img, .thumbnail>img {
+  height: 100px;
+  width: auto;
+}
+
+.carousel-indicators {
+  bottom: auto;
+}
+
+.carousel > .carousel-control {
+  opacity: 1;
+  background: #e60087;
+}
+
+.carousel > .carousel-control:hover {
+  opacity: 1;
+}

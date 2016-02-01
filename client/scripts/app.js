@@ -1,7 +1,8 @@
 angular.module('spoons', [
   'ngRoute',
   'ui.bootstrap',
-  'btford.socket-io'
+  'btford.socket-io',
+  'ngAnimate'
   ])
   .factory('socket', function(socketFactory) {
     var myIoSocket = io.connect('/');
