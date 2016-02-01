@@ -35,6 +35,7 @@ span {
   outline: 0;
   text-indent: 155px; // Arbitrary.
   transition: all .3s ease-in-out;
+  margin-bottom: 15px;
   
   &::-webkit-input-placeholder {
     color: #efefef;
@@ -78,10 +79,6 @@ span {
       right: 20%;
     }
   }
-}
-
-span:nth-child(1) .gate {
-  margin-bottom: 15px;
 }
 
 .flip:focus,
