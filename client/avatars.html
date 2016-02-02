@@ -1,7 +1,7 @@
 <div>
     <uib-carousel no-pause="true">
-      <uib-slide ng-repeat="slide in slides" index="slide.id">
-        <img ng-src="{{slide.image}}" style="margin:auto;" ng-click="selectAvatar()">
+      <uib-slide ng-repeat="slide in slides" index="slide.id"> <!-- slide doesn't yet have an id -->
+        <img ng-src="{{slide.image}}" style="margin:auto;" ng-click="selectAvatar(slide)">
       </uib-slide>
     </uib-carousel>      
 </div>

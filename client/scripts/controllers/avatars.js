@@ -1,7 +1,7 @@
 angular.module('spoons')
   .controller('AvatarsCtrl', function ($scope, $location, GameService) {
-    $scope.selectAvatar = function () {
-      console.log("User picked an avatar but idk which one");
+    $scope.selectAvatar = function (slide) {
+      console.log("User picked", slide);
     };
 
     $scope.slides = [
