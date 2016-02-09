@@ -90,14 +90,20 @@ nav {
 li.avatar-list-image {
   text-decoration: none;
   display: inline-block;
-  margin-left: 25px;
-  width: 100px;
+  margin-left: 5px;
+  border-width: 5px;
+  border-color: rgba(115,173,33,0);
+  border-style: solid;
+
 }
 
 li.avatar-list-image.active-avatar {
-  border: 5px solid green;
-  margin-left: 20px;
-  margin-right: 5px;
+  border-color: rgba(115,173,33,1);
+  /*margin-left: 5px;*/
+}
+
+.avatar-list-image img {
+  width: 25px;
 }
 
 /*li.avatar-list-image:nth-child(1) {
