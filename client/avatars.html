@@ -1,7 +1,12 @@
 <div>
-    <uib-carousel no-pause="true">
-      <uib-slide ng-repeat="slide in slides" index="slide.id"> <!-- slide doesn't yet have an id -->
-        <img ng-src="{{slide.image}}" style="margin:auto;" ng-click="selectAvatar(slide)">
-      </uib-slide>
-    </uib-carousel>      
+  <ul class="all-avatars">
+    <li class="avatar-list-image" ng-class="{'active-avatar':slide.active}" ng-repeat="slide in slides" ng-click="selectFromList($index)">
+      <img ng-src="{{slide.image}}">
+    </li>
+  </ul>
+  <uib-carousel no-pause="true">
+    <uib-slide ng-repeat="slide in slides" active="slide.active"> <!-- slide doesn't yet have an id -->
+      <img ng-src="{{slide.image}}" style="margin:auto;" ng-click="selectAvatar(slide)">
+    </uib-slide>
+  </uib-carousel>      
 </div>
