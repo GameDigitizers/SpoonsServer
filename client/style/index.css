@@ -1,3 +1,7 @@
+/*
+http://paletton.com/#uid=50m0Q0kEELNlBNGrOMnLhuKLnnP
+*/
+
 html {
   height: 100%;
 }
@@ -57,16 +61,18 @@ nav {
   height: 100%;
 }
 
-/*.carousel {
+.vert-center {
   position: relative;
   top: 50%;
   -ms-transform: translateY(-50%);
   -webkit-transform: translateY(-50%);
   transform: translateY(-50%);
-}*/
+}
 
-.carousel {
-  margin-top: 20px;
+.all-avatars {
+  position: absolute;
+  width: 100%;
+  top: 10%;
 }
 
 .carousel-inner>.item>a>img, .carousel-inner>.item>img, .img-responsive, .thumbnail a>img, .thumbnail>img {
@@ -90,22 +96,19 @@ nav {
 li.avatar-list-image {
   text-decoration: none;
   display: inline-block;
+  transition: all .5s ease-in-out;
+  border: 5px solid transparent;
   margin-left: 5px;
-  border-width: 5px;
-  border-color: rgba(115,173,33,0);
-  border-style: solid;
-
 }
 
 li.avatar-list-image.active-avatar {
-  border-color: rgba(115,173,33,1);
-  /*margin-left: 5px;*/
+  border-color: #FFBF00;
 }
 
 .avatar-list-image img {
   width: 25px;
 }
 
-/*li.avatar-list-image:nth-child(1) {
+li.avatar-list-image:nth-child(1) {
   margin-left: 0;
-}*/
+}
