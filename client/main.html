@@ -1,10 +1,15 @@
 <div class="myhero">
   <div>
     <form ng-submit="go()">
-    <span>
+    <span class="game-name">
         <input class="gate flip" id="game-name" type="text" placeholder="Where the spoons at?" ng-model="gameName"/>
         <label for="game-name">Game Name</label>
     </span>
+    <span ng-if="gameNameSubmitted">
+        <input class="gate flip" id="player-name" type="text" placeholder="What's your name..." ng-model="playerName"/>
+        <label for="player-name">Your Name</label>
+    </span>
+
     <div class="action-button" ng-click="go()">
         Let's play!
     </div>
