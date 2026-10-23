@@ -1,0 +1,113 @@
+/* Palette from the original lobby: http://paletton.com/#uid=50m0Q0kEELNlBNGrOMnLhuKLnnP */
+:root {
+  --butter: #ffdd76;
+  --orange: #ff5f00;
+  --gold: #ffbf00;
+  --plum: #a81889;
+  --felt: #2f7d4f;
+  --felt-dark: #1f5a38;
+  --ink: #2b1a0e;
+  --paper: #fff8e6;
+  --danger: #d7263d;
+  --ok: #2a9d4b;
+
+  --font-display: 'Gloria Hallelujah', cursive;
+  --font-body: 'Nunito', system-ui, sans-serif;
+
+  --card-ratio: 125 / 182;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overscroll-behavior: none;
+}
+
+body {
+  background: var(--butter);
+  color: var(--ink);
+  font-family: var(--font-body);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+#app {
+  height: 100%;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+input {
+  font: inherit;
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+.logo {
+  font-family: var(--font-display);
+  color: var(--orange);
+  text-shadow: 2px 2px 0 var(--ink);
+  font-weight: 900;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.big-button {
+  display: block;
+  width: 100%;
+  padding: 14px 20px;
+  border: 3px solid var(--ink);
+  border-radius: 14px;
+  background: var(--gold);
+  color: var(--ink);
+  font-weight: 800;
+  font-size: 1.15rem;
+  box-shadow: 0 4px 0 var(--ink);
+}
+
+.big-button:active {
+  transform: translateY(3px);
+  box-shadow: 0 1px 0 var(--ink);
+}
+
+.big-button.secondary {
+  background: var(--paper);
+}
+
+.big-button.go {
+  background: var(--ok);
+  color: white;
+}
+
+.text-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 3px solid var(--ink);
+  border-radius: 12px;
+  background: var(--paper);
+  font-size: 1.2rem;
+}
+
+.card-img {
+  display: block;
+  aspect-ratio: var(--card-ratio);
+  border-radius: 6%;
+  background: white;
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.35);
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
+}
